@@ -1,5 +1,5 @@
 
- poly_n = 6;
+ poly_n = 12;
  diametro = 7;
  radio= diametro/2;
  altura =4;
@@ -114,6 +114,13 @@ translate([-radio, 0, 0.0])
   translate([10+radio+1, 0, 0.0]){
   cylinder(h = altura, d=diametro*.5, center = true, $fn=poly_n);
 }}}
+
+translate([ 0, 50.0]){
+
+linear_extrude(height=50,center=true,twist=90)
+    scale([2,1,1])
+    circle(d=5);
+}
 //
 //minkowski(){
 // 
