@@ -87,7 +87,8 @@ module bolsillo_tuerca_whitworth(
     tipo = "normal",
     profundidad_bolsillo = -1,   // -1 = usar espesor estándar según norma
     holgura = 0.3,
-    holgura_altura = 0.2
+    holgura_altura = 0.2,
+    alivio=0
 ) {
     datos = tuerca_whitworth(diametro_rosca_pulg, tipo);
     ancho_caras = datos[0];
@@ -105,7 +106,16 @@ module bolsillo_tuerca_whitworth(
         translate([0, 0, 0])
             cylinder(h = profundidad_real * 0.4,
                      r = (datos[2]/2) + holgura);
-    }
+          if(alivio>0){
+        translate([ 0, 0,-alivio])
+         color("#AA00AAAA")cylinder(h = alivio,
+                     r = (datos[2]/2) + holgura);
+         }
+     }else if(alivio>0){
+     translate([ 0, 0,-alivio])
+
+      color("#AA00AAAA")cylinder(h=alivio,r=radio_hex,$fn = 6);
+     }
 }
 
 // =====================================================
@@ -144,7 +154,8 @@ module agujero_con_tuerca_whitworth(
     holgura_pasante = 0.5,
     holgura_altura = 0.2,
     margen_corte = 0.5,               // sobresalto para evitar z-fighting
-    profundidad_abs = true
+    profundidad_abs = true,
+    alivio=0
 ) {
     datos = tuerca_whitworth(diametro_rosca_pulg, tipo);
     espesor_estandar = datos[1];
@@ -156,7 +167,8 @@ module agujero_con_tuerca_whitworth(
         tipo = tipo,
         profundidad_bolsillo = bolsillo_real,
         holgura = holgura_tuerca,
-        holgura_altura = holgura_altura
+        holgura_altura = holgura_altura,
+        alivio=alivio
     );
 
     agujero_pasante_tuerca_whitworth(
@@ -191,3 +203,13 @@ translate([30, 40, 0])
 echo("5/16 brida:", tuerca_whitworth(5/16, "brida"));
 translate([75, 40, 0])
     agujero_con_tuerca_whitworth(5/16, profundidad_pieza = 12, tipo="brida");
+    
+    
+    
+echo("5/16 autoblocante:", tuerca_whitworth(5/16, "autoblocante"));
+translate([30, 0, 0])
+    agujero_con_tuerca_whitworth(5/16, profundidad_pieza = 12, tipo="autoblocante",alivio=2);
+
+echo("5/16 brida:", tuerca_whitworth(5/16, "brida"));
+translate([75, 0, 0])
+    agujero_con_tuerca_whitworth(5/16, profundidad_pieza = 12, tipo="brida",alivio=2);

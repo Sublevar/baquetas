@@ -97,7 +97,8 @@ module bolsillo_tuerca_unc(
     tipo = "normal",
     profundidad_bolsillo = -1,   // -1 = usar espesor estándar de la norma
     holgura = 0.3,
-    holgura_altura = 0.2
+    holgura_altura = 0.2,
+    alivio=0
 ) {
     datos = tuerca_unc(diametro_rosca_pulg, tipo);
     ancho_caras = datos[0];
@@ -115,7 +116,16 @@ module bolsillo_tuerca_unc(
         translate([0, 0, 0])
             cylinder(h = profundidad_real * 0.4,
                      r = (datos[2]/2) + holgura);
-    }
+       if(alivio>0){
+        translate([ 0, 0,-alivio])
+         color("#AA00AAAA")cylinder(h = alivio,
+                     r = (datos[2]/2) + holgura);
+         }
+     }else if(alivio>0){
+     translate([ 0, 0,-alivio])
+
+      color("#AA00AAAA")cylinder(h=alivio,r=radio_hex,$fn = 6);
+     }
 }
 
 // =====================================================
@@ -155,7 +165,9 @@ module agujero_con_tuerca_unc(
     holgura_pasante = 0.5,
     holgura_altura = 0.2,
     margen_corte = 0.5,               // sobresalto para evitar z-fighting
-    profundidad_abs = true
+    profundidad_abs = true,
+    alivio=0
+
 ) {
     datos = tuerca_unc(diametro_rosca_pulg, tipo);
     espesor_estandar = datos[1];
@@ -167,7 +179,8 @@ module agujero_con_tuerca_unc(
         tipo = tipo,
         profundidad_bolsillo = bolsillo_real,
         holgura = holgura_tuerca,
-        holgura_altura = holgura_altura
+        holgura_altura = holgura_altura,
+        alivio=alivio
     );
 
     agujero_pasante_tuerca_unc(
@@ -202,3 +215,11 @@ translate([30, 0, 0])
 echo("1/4 brida:", tuerca_unc(0.25, "brida"));
 translate([75, 0, 0])
     agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, tipo="brida");
+
+echo("1/4 jam:", tuerca_unc(0.25, "jam"));
+translate([-15, -15, 0])
+    agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, tipo="jam", alivio=2);
+
+echo("1/4 brida:", tuerca_unc(0.25, "brida"));
+translate([75, -25, 0])
+    agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, tipo="brida", alivio=2);

@@ -97,7 +97,8 @@ module bolsillo_tuerca_metrica(
     tipo = "normal",             // "normal" | "delgada" | "autoblocante" | "brida"
     profundidad_bolsillo = -1,   // -1 = usar altura estándar según norma
     holgura = 0.3,
-    holgura_altura = 0.2
+    holgura_altura = 0.2,
+    alivio=0 // hueco hacia atras para introducir la tuerca -- buscar mejor nombre
 ) {
     datos = tuerca_metrica(diametro_rosca, tipo);
     ancho_caras = datos[0];
@@ -117,7 +118,19 @@ module bolsillo_tuerca_metrica(
         translate([0, 0, 0])
             cylinder(h = profundidad_real * 0.4,
                      r = (datos[2]/2) + holgura);
-    }
+        if(alivio>0){
+        translate([ 0, 0,-alivio])
+         color("#AA00AAAA")cylinder(h = alivio ,
+                     r = (datos[2]/2) + holgura);
+         }
+     }else if(alivio>0){
+     translate([ 0, 0,-alivio])
+
+      color("#AA00AAAA")cylinder(h=alivio,r=radio_hex,$fn = 6);
+     }
+    
+    
+    
 }
 
 // =====================================================
@@ -154,7 +167,8 @@ module agujero_con_tuerca_metrica(
     holgura_tuerca = 0.3,
     holgura_pasante = 0.5,
     holgura_altura = 0.2,
-    profundidad_abs = true
+    profundidad_abs = true,
+    alivio=0
 ) {
     datos = tuerca_metrica(diametro_rosca, tipo);
     espesor_estandar = datos[1];
@@ -170,7 +184,8 @@ module agujero_con_tuerca_metrica(
         tipo = tipo,
         profundidad_bolsillo = bolsillo_real,
         holgura = holgura_tuerca,
-        holgura_altura = holgura_altura
+        holgura_altura = holgura_altura,
+        alivio=alivio
     );
 
     agujero_pasante_tuerca_metrica(
@@ -194,8 +209,19 @@ function brida_tuerca_metrica(D, tipo = "brida") = tuerca_metrica(D, tipo)[2];
 
 // M8 normal (DIN 934): usa m=6.8mm automáticamente
 echo("M8 normal:", tuerca_metrica(8, "normal"));
-translate([-40, 0, 0])
-    agujero_con_tuerca_metrica(8, tipo="normal");
+
+translate([-40, 0, 0]){
+     agujero_con_tuerca_metrica(8, tipo="normal", alivio=2);
+//
+//  sagita=2;
+// holgura_tuerca=1.1;
+//    agujero_con_tuerca_metrica(8, tipo="normal");
+// translate([ 0, 0,-sagita])
+//
+//      color("#AA0000")cylinder(h=sagita,r=tuerca_metrica(8, "normal")[1]+holgura_tuerca,$fn = 6);
+}
+
+
 translate([-40, -30, 0])
     agujero_con_tuerca_metrica(8,profundidad_pieza = 15, tipo="normal");
 translate([-40, 30, 0])
@@ -215,6 +241,10 @@ translate([15, 0, 0])
 echo("M8 con brida:", tuerca_metrica(8, "brida"));
 translate([40, 0, 0])
     agujero_con_tuerca_metrica(8, tipo="brida");
+// M8 con brida (DIN 6923): usa m=8.0mm automáticamente
+echo("M8 con brida:", tuerca_metrica(8, "brida"));
+translate([40, 20, 0])
+    agujero_con_tuerca_metrica(8, tipo="brida", alivio =2);
 
 // Si igual querés forzar un valor custom, lo podés seguir pasando:
 translate([0, 20, 0])
