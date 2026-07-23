@@ -17,16 +17,16 @@ c=tuerca_unc(0.25, "normal")[0];
 grosor=d+tuerca_unc(0.25, "normal")[0] *2;
 sagita = r-sqrt( pow(r,2) - pow(c/2,2) ) + margen;
 
- difference(){
+ //difference(){
    rotate([0,90,0])
   {
-    difference(){
-    cylinder(d=grosor,h=ancho_baqueta, center=true, $fn=poly_n);
+    //difference(){
+   // cylinder(d=grosor,h=ancho_baqueta, center=true, $fn=poly_n);
     cylinder(d=d,h=largo_palo, center=true, $fn=poly_n);
    }
-  }
+  //}
   
-  
+  rotate([angulo_tornillo,0,0])
     translate([0,0,r])agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, alivio=sagita);
 //PARAMETRIZAR ESTAS OPCIONES UNA VEZ DEFINIDO SI SON HUECOS O SON FORMAS POSITIVAS A RESTAR : ESTUDIAR CHILDREN()
 //  
@@ -46,7 +46,7 @@ sagita = r-sqrt( pow(r,2) - pow(c/2,2) ) + margen;
   
 //  for (i=[0:1:3]){
 //    rotate([120*i,0,0])translate([0,0,r]){
-//     agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, alivio=sagita);
+            //     agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, alivio=sagita);
 //     }
 //   }
   
@@ -55,4 +55,4 @@ sagita = r-sqrt( pow(r,2) - pow(c/2,2) ) + margen;
 //     agujero_con_tuerca_unc(0.25, profundidad_pieza = 12, alivio=sagita);
 //     }
 //   }
- }
+// }
