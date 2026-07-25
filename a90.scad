@@ -24,18 +24,28 @@ translate([distancia, 0,0])rotate([0,0,90])
 
   rotate([0,90,90]) hueco_baqueta(cantidad_tornillos=2);;
 translate([distancia, 0,0])rotate([0,0,90])
-     hueco_baqueta(cantidad_tornillos=2);
+    hueco_baqueta(cantidad_tornillos=2);
     }
  
+    
  //array
-// difference() {
-//  hull(){
-// for (i =[0:cantidad]){translate([distancia*i, 0,0])rotate([0,0,90])
-//    baqueta_solida(ancho_baqueta=ancho_baqueta);
-//}}
-//
-// for (i =[0:cantidad]){translate([distancia*i, 0,0])rotate([0,0,90])
-// hueco_baqueta(cantidad_tornillos=2);}}
+    //TODO: altaerna entre rotacion y no rotacion, y solo rotar n posiciones (ej extremos o uno en especifico)
+    rotTotal=90;
+   rotParcial= rotTotal/(cantidad-1);
+    translate([100,0,0]){
+ difference() {
+  hull(){
+ for (i =[1:cantidad]){translate([distancia*i, 0,0])
+  rotate([0,rotParcial*i,90])
+    baqueta_solida(ancho_baqueta=ancho_baqueta);
+}}
+
+ for (i =[1:cantidad]){translate([distancia*i, 0,0])
+  
+  rotate([0,rotParcial*i,90])
+ hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20);
+  }}
+ }
  
  
  
@@ -70,16 +80,46 @@ translate([distancia, 0,0])rotate([0,0,90])
 
 
 
+ //T
+
+  desface_centro = [0,0,-5];
+ translate([100,100,0]){
+   difference() {
+
+ hull(){
+baqueta_solida(ancho_baqueta=60);
+  translate([ancho_baqueta, 0, 0.0])rotate([0,90,0])
+baqueta_solida(ancho_baqueta=60);
+}
+ hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=60,desface_centro=desface_centro);
+  translate([ancho_baqueta, 0, 0.0])rotate([0,90,0])
+ hueco_baqueta(cantidad_tornillos=1,profundidad_pieza=20,largo_hueco_principal=60);
+}
+
+}
 
 //cruz
+//    translate([100,100,0]){
+// difference() {
+//
+// hull(){
+//    baqueta_solida(ancho_baqueta=60);
+//translate([0, 0, 0.0])rotate([0,90,90])
+//    baqueta_solida(ancho_baqueta=60);
+//}
+//     hueco_baqueta(cantidad_tornillos=2);
+//
+// translate([0, 0, 0.0])rotate([0,90,90])
+//    hueco_baqueta(cantidad_tornillos=4,profundidad_pieza=20);
+// }
+//}
+
 //
 // hull(){
 //    rotate([0,90,90])baqueta_solida(ancho_baqueta=60);
 //translate([0, 0, 0.0])rotate([0,0,90])
 //    baqueta_solida(ancho_baqueta=60);
 //}
-
-
 // difference() {
 //
 // hull(){

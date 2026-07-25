@@ -11,6 +11,7 @@ diametro               = 24;     // diámetro de la baqueta/eje (mm)
 poly_n                 = 16;
 margen                 = .5;
 largo_hueco_principal  = 120;
+desface_centro = [0,0,0];
 angulo_tornillo        = 0;      // ángulo de arranque del primer tornillo (grados)
 
 // --- 1) Elegí la FAMILIA de rosca/tuerca ---
@@ -144,7 +145,8 @@ module hueco_baqueta(
     cantidad_tornillos    = cantidad_tornillos,
     profundidad_pieza     = profundidad_pieza,
     angulo_tornillo       = angulo_tornillo,
-    hueco_principal       = hueco_principal
+    hueco_principal       = hueco_principal,
+    desface_centro        = desface_centro
 ) {
     d_ = diametro + margen;
     r_ = d_ / 2;
@@ -152,9 +154,12 @@ module hueco_baqueta(
     sagita_ = r_ - sqrt(pow(r_, 2) - pow(c_ / 2, 2)) + margen;
 
     if (hueco_principal) {
-        rotate([0, 90, 0])
-            cylinder(d = d_, h = largo_hueco_principal, center = true, $fn = poly_n);
-    }
+        rotate([0, 90, 0]){
+            translate(desface_centro){
+                cylinder(d = d_, h = largo_hueco_principal, center = true, $fn = poly_n);
+            }
+   }
+  }
 
     distribuir_radial(cantidad_tornillos, r_, angulo_tornillo)
         agujero_tuerca(familia_tuerca, subtipo_tuerca, medida_tornillo, profundidad_pieza, sagita_);
