@@ -8,7 +8,8 @@ use <hueco_baqueta.scad>
 
 // Baqueta / eje
 _diametro        = 24;     // diametro interior del eje (mm)
-_margen          = 0.5;    // tolerancia radial de ajuste
+_holgura_a       = 0.5;    // holgura radial extremo A
+_holgura_b       = 0.5;    // holgura radial extremo B
 _poly_n          = 16;     // resolucion de circulos
 _ancho_baqueta   = 40;     // longitud del cilindro macizo (mm)
 
@@ -39,7 +40,8 @@ module junta_doble(
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
@@ -51,7 +53,7 @@ module junta_doble(
                 baqueta_solida(
                     ancho_baqueta   = ancho_baqueta,
                     diametro        = diametro,
-                    margen          = margen,
+                    holgura         = holgura_a,
                     poly_n          = poly_n,
                     familia_tuerca  = familia_tuerca,
                     subtipo_tuerca  = subtipo_tuerca,
@@ -61,7 +63,7 @@ module junta_doble(
                 baqueta_solida(
                     ancho_baqueta   = ancho_baqueta,
                     diametro        = diametro,
-                    margen          = margen,
+                    holgura         = holgura_b,
                     poly_n          = poly_n,
                     familia_tuerca  = familia_tuerca,
                     subtipo_tuerca  = subtipo_tuerca,
@@ -73,7 +75,7 @@ module junta_doble(
                 cantidad_tornillos = cantidad_tornillos,
                 profundidad_pieza  = profundidad_pieza,
                 diametro           = diametro,
-                margen             = margen,
+                holgura            = holgura_a,
                 poly_n             = poly_n,
                 familia_tuerca     = familia_tuerca,
                 subtipo_tuerca     = subtipo_tuerca,
@@ -84,7 +86,7 @@ module junta_doble(
                 cantidad_tornillos = cantidad_tornillos,
                 profundidad_pieza  = profundidad_pieza,
                 diametro           = diametro,
-                margen             = margen,
+                holgura            = holgura_b,
                 poly_n             = poly_n,
                 familia_tuerca     = familia_tuerca,
                 subtipo_tuerca     = subtipo_tuerca,
@@ -117,13 +119,19 @@ module junta_array(
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
+    interpolar_holgura = true,   // true: interpola entre holgura_a y holgura_b; false: todos usan holgura_b
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
     medida_tornillo    = _medida_tornillo
 ) {
     rot_parcial = rot_total / (cantidad - 1);
+    function holgura_en(i) =
+        interpolar_holgura
+            ? holgura_a + (holgura_b - holgura_a) * (i - 1) / (cantidad - 1)
+            : holgura_b;
 
     function rot_en(i) =
         modo == "extremos"
@@ -142,7 +150,7 @@ module junta_array(
                     baqueta_solida(
                         ancho_baqueta   = ancho_baqueta,
                         diametro        = diametro,
-                        margen          = margen,
+                        holgura         = holgura_a,
                         poly_n          = poly_n,
                         familia_tuerca  = familia_tuerca,
                         subtipo_tuerca  = subtipo_tuerca,
@@ -153,7 +161,7 @@ module junta_array(
                         baqueta_solida(
                             ancho_baqueta   = ancho_baqueta,
                             diametro        = diametro,
-                            margen          = margen,
+                            holgura         = holgura_b,
                             poly_n          = poly_n,
                             familia_tuerca  = familia_tuerca,
                             subtipo_tuerca  = subtipo_tuerca,
@@ -165,7 +173,7 @@ module junta_array(
                     cantidad_tornillos = cantidad_tornillos,
                     profundidad_pieza  = profundidad_pieza,
                     diametro           = diametro,
-                    margen             = margen,
+                    holgura            = holgura_a,
                     poly_n             = poly_n,
                     familia_tuerca     = familia_tuerca,
                     subtipo_tuerca     = subtipo_tuerca,
@@ -177,7 +185,7 @@ module junta_array(
                         cantidad_tornillos = cantidad_tornillos,
                         profundidad_pieza  = profundidad_pieza,
                         diametro           = diametro,
-                        margen             = margen,
+                        holgura            = holgura_b,
                         poly_n             = poly_n,
                         familia_tuerca     = familia_tuerca,
                         subtipo_tuerca     = subtipo_tuerca,
@@ -193,7 +201,7 @@ module junta_array(
                             baqueta_solida(
                                 ancho_baqueta   = ancho_baqueta,
                                 diametro        = diametro,
-                                margen          = margen,
+                                holgura         = holgura_en(i),
                                 poly_n          = poly_n,
                                 familia_tuerca  = familia_tuerca,
                                 subtipo_tuerca  = subtipo_tuerca,
@@ -206,7 +214,7 @@ module junta_array(
                             cantidad_tornillos = cantidad_tornillos,
                             profundidad_pieza  = profundidad_pieza,
                             diametro           = diametro,
-                            margen             = margen,
+                            holgura            = holgura_en(i),
                             poly_n             = poly_n,
                             familia_tuerca     = familia_tuerca,
                             subtipo_tuerca     = subtipo_tuerca,
@@ -230,7 +238,8 @@ module junta_T(
     cantidad_rama      = 1,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
@@ -241,7 +250,7 @@ module junta_T(
             baqueta_solida(
                 ancho_baqueta   = ancho_baqueta,
                 diametro        = diametro,
-                margen          = margen,
+                holgura         = holgura_a,
                 poly_n          = poly_n,
                 familia_tuerca  = familia_tuerca,
                 subtipo_tuerca  = subtipo_tuerca,
@@ -251,7 +260,7 @@ module junta_T(
                 baqueta_solida(
                     ancho_baqueta   = ancho_baqueta,
                     diametro        = diametro,
-                    margen          = margen,
+                    holgura         = holgura_b,
                     poly_n          = poly_n,
                     familia_tuerca  = familia_tuerca,
                     subtipo_tuerca  = subtipo_tuerca,
@@ -264,7 +273,7 @@ module junta_T(
             largo_hueco_principal = ancho_baqueta,
             desface_centro        = desface_centro,
             diametro              = diametro,
-            margen                = margen,
+            holgura               = holgura_a,
             poly_n                = poly_n,
             familia_tuerca        = familia_tuerca,
             subtipo_tuerca        = subtipo_tuerca,
@@ -276,7 +285,7 @@ module junta_T(
                 profundidad_pieza     = profundidad_pieza,
                 largo_hueco_principal = ancho_baqueta,
                 diametro              = diametro,
-                margen                = margen,
+                holgura               = holgura_b,
                 poly_n                = poly_n,
                 familia_tuerca        = familia_tuerca,
                 subtipo_tuerca        = subtipo_tuerca,
@@ -297,7 +306,8 @@ module union_lineal(
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
+    holgura_b          = _holgura_b,
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
@@ -308,7 +318,7 @@ module union_lineal(
             baqueta_solida(
                 ancho_baqueta   = ancho_baqueta,
                 diametro        = diametro,
-                margen          = margen,
+                holgura         = holgura_a,
                 poly_n          = poly_n,
                 familia_tuerca  = familia_tuerca,
                 subtipo_tuerca  = subtipo_tuerca,
@@ -318,7 +328,7 @@ module union_lineal(
                 baqueta_solida(
                     ancho_baqueta   = ancho_baqueta,
                     diametro        = diametro,
-                    margen          = margen,
+                    holgura         = holgura_b,
                     poly_n          = poly_n,
                     familia_tuerca  = familia_tuerca,
                     subtipo_tuerca  = subtipo_tuerca,
@@ -331,7 +341,7 @@ module union_lineal(
             largo_hueco_principal = ancho_baqueta,
             desface_centro        = desface_centro,
             diametro              = diametro,
-            margen                = margen,
+            holgura               = holgura_a,
             poly_n                = poly_n,
             familia_tuerca        = familia_tuerca,
             subtipo_tuerca        = subtipo_tuerca,
@@ -344,7 +354,7 @@ module union_lineal(
                 largo_hueco_principal = ancho_baqueta,
                 desface_centro        = [0, 0, -ancho_baqueta],
                 diametro              = diametro,
-                margen                = margen,
+                holgura               = holgura_b,
                 poly_n                = poly_n,
                 familia_tuerca        = familia_tuerca,
                 subtipo_tuerca        = subtipo_tuerca,
@@ -364,7 +374,7 @@ module terminal(
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
@@ -374,7 +384,7 @@ module terminal(
         baqueta_solida(
             ancho_baqueta   = ancho_baqueta,
             diametro        = diametro,
-            margen          = margen,
+            holgura         = holgura_a,
             poly_n          = poly_n,
             familia_tuerca  = familia_tuerca,
             subtipo_tuerca  = subtipo_tuerca,
@@ -386,7 +396,7 @@ module terminal(
             largo_hueco_principal = ancho_baqueta,
             desface_centro        = desface_centro,
             diametro              = diametro,
-            margen                = margen,
+            holgura               = holgura_a,
             poly_n                = poly_n,
             familia_tuerca        = familia_tuerca,
             subtipo_tuerca        = subtipo_tuerca,
@@ -408,7 +418,7 @@ module terminal_esfera(
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
-    margen             = _margen,
+    holgura_a          = _holgura_a,
     poly_n             = _poly_n,
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
@@ -420,7 +430,7 @@ module terminal_esfera(
             baqueta_solida(
                 ancho_baqueta   = ancho_baqueta,
                 diametro        = diametro,
-                margen          = margen,
+                holgura         = holgura_a,
                 poly_n          = poly_n,
                 familia_tuerca  = familia_tuerca,
                 subtipo_tuerca  = subtipo_tuerca,
@@ -435,7 +445,7 @@ module terminal_esfera(
             largo_hueco_principal = ancho_baqueta,
             desface_centro        = desface_centro,
             diametro              = diametro,
-            margen                = margen,
+            holgura               = holgura_a,
             poly_n                = poly_n,
             familia_tuerca        = familia_tuerca,
             subtipo_tuerca        = subtipo_tuerca,

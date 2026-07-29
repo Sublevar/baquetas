@@ -12,7 +12,7 @@ use <utils/avellanado_americano.scad>;
 hueco_principal        = true;
 diametro               = 24;     // diámetro de la baqueta/eje (mm)
 poly_n                 = 16;
-margen                 = .5;
+holgura                = .5;
 largo_hueco_principal  = 120;
 desface_centro = [0,0,0];
 angulo_tornillo        = 0;      // ángulo de arranque del primer tornillo (grados)
@@ -37,7 +37,7 @@ cantidad_tornillos = 1;      // 1, 2, 3, 4, 6, lo que necesites
 
 ancho_baqueta = 30;           // largo del cilindro macizo (eje Y de la pieza)
 
-d = diametro + margen;
+d = diametro + holgura;
 r = d / 2;
 
 /* ============================================================
@@ -81,7 +81,7 @@ function profundidad_avellano_tuerca(familia, medida) =
     0;
 
 // Grosor de material necesario para alojar la tuerca elegida:
-// diámetro del eje (+margen) + 2 veces el ancho de llave de la tuerca.
+// diámetro del eje (+holgura) + 2 veces el ancho de llave de la tuerca.
 // Es la misma cuenta que usabas a mano:
 //   grosor = d + tuerca_unc(0.25,"normal")[0] * 2;
 // Ahora con DEFAULTS: podés llamarla sin argumentos y toma los
@@ -91,14 +91,14 @@ function profundidad_avellano_tuerca(familia, medida) =
 reiterar_tuerca= 2.5;
 function grosor_baqueta(
     diametro = diametro,
-    margen   = margen,
+    holgura  = holgura,
     familia  = familia_tuerca,
     subtipo  = subtipo_tuerca,
     medida   = medida_tornillo
-) = (diametro + margen) + ancho_tuerca(familia, subtipo, medida) * reiterar_tuerca;
+) = (diametro + holgura) + ancho_tuerca(familia, subtipo, medida) * reiterar_tuerca;
 
 c = ancho_tuerca(familia_tuerca, subtipo_tuerca, medida_tornillo);
-sagita = r - sqrt(pow(r, 2) - pow(c / 2, 2)) + margen;
+sagita = r - sqrt(pow(r, 2) - pow(c / 2, 2)) + holgura;
 
 echo(str("Tuerca elegida: ", familia_tuerca, " / ", subtipo_tuerca, " ", medida_tornillo, " -> ancho llave: ", c));
 
@@ -193,7 +193,7 @@ module avellanado_tuerca(familia, medida, profundidad_avellano) {
 
 module hueco_baqueta(
     diametro              = diametro,
-    margen                = margen,
+    holgura               = holgura,
     largo_hueco_principal = largo_hueco_principal,
     poly_n                = poly_n,
     familia_tuerca        = familia_tuerca,
@@ -207,16 +207,16 @@ module hueco_baqueta(
     agujero_cara_actual   = true,
     agujero_cara_opuesta  = true
 ) {
-    d_ = diametro + margen;
+    d_ = diametro + holgura;
     r_ = d_ / 2;
     c_ = ancho_tuerca(familia_tuerca, subtipo_tuerca, medida_tornillo);
     datos_tuerca_ = datos_tuerca(familia_tuerca, subtipo_tuerca, medida_tornillo);
     espesor_tuerca_ = datos_tuerca_[1];
     diametro_brida_ = datos_tuerca_[2];
     largo_tornillo_ = profundidad_pieza;
-    sagita_ = r_ - sqrt(pow(r_, 2) - pow(c_ / 2, 2)) + margen;
+    sagita_ = r_ - sqrt(pow(r_, 2) - pow(c_ / 2, 2)) + holgura;
 
-    grosor_exterior_ = grosor_baqueta(diametro, margen, familia_tuerca, subtipo_tuerca, medida_tornillo);
+    grosor_exterior_ = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
     radio_exterior_ = grosor_exterior_ / 2;
     profundidad_avellano_ = profundidad_avellano_tuerca(familia_tuerca, medida_tornillo);
 
@@ -272,14 +272,14 @@ module hueco_baqueta(
 
 module baqueta_solida(
     diametro              = diametro,
-    margen                = margen,
+    holgura               = holgura,
     familia_tuerca        = familia_tuerca,
     subtipo_tuerca        = subtipo_tuerca,
     medida_tornillo       = medida_tornillo,
     ancho_baqueta         = ancho_baqueta,
     poly_n                = poly_n
 ) {
-    g = grosor_baqueta(diametro, margen, familia_tuerca, subtipo_tuerca, medida_tornillo);
+    g = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
     rotate([0, 90, 0])
         cylinder(d = g, h = ancho_baqueta, center = true, $fn = poly_n);
 }
