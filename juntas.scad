@@ -1,297 +1,494 @@
-use <hueco_baqueta.scad>;
+use <hueco_baqueta.scad>
 
- poly_n = 12;
- diametro = 7;
- radio= diametro/2;
- altura =18;
- distancia=40;
- ancho_baqueta=40;
- rotacion=120;
- cantidad=5;
- 
- //JUNTAS DOBLES
-difference() {
- 
- hull(){
-    rotate([0,90,90])baqueta_solida(ancho_baqueta=ancho_baqueta);
-translate([distancia, 0,0])rotate([0,0,90])
-    baqueta_solida(ancho_baqueta=ancho_baqueta);
-}
+/* ============================================================
+   VARIABLES GLOBALES
+   Funcionan como $fn: cambialas una sola vez aca arriba y
+   afectan a todos los modulos que no sobreescriban el parametro.
+   ============================================================ */
 
-  rotate([0,90,90]) hueco_baqueta(cantidad_tornillos=2);;
-translate([distancia, 0,0])rotate([0,0,90])
-    hueco_baqueta(cantidad_tornillos=2);
+// Baqueta / eje
+_diametro        = 24;     // diametro interior del eje (mm)
+_margen          = 0.5;    // tolerancia radial de ajuste
+_poly_n          = 16;     // resolucion de circulos
+_ancho_baqueta   = 40;     // longitud del cilindro macizo (mm)
+
+// Tornillo / tuerca (cambia las 3 lineas de abajo para usar otra rosca en todo el archivo)
+_familia_tuerca  = "UNC";       // "UNC" | "UNF" | "metrica" | "whitworth"
+_subtipo_tuerca  = "normal";    // "normal" | "delgada" | "autoblocante" | "brida"
+_medida_tornillo = 0.1875;      // pulgadas para UNC/UNF/whitworth; mm para metrica
+
+// Defaults de ensamble
+_profundidad     = 20;     // grosor de material (profundidad_pieza en hueco_baqueta)
+_distancia       = 40;     // separacion entre baquetas en arrays / juntas dobles
+_cantidad        = 5;      // cantidad de elementos en arrays
+
+
+/* ============================================================
+   JUNTA DOBLE
+   Conecta dos baquetas separadas por distancia.
+   rot_a / rot_b: rotacion en Y de cada brazo (grados).
+     rot_a=90, rot_b=0   -> perpendicular (default)
+     rot_a=0,  rot_b=0   -> en linea
+     rot_a=90, rot_b=120 -> con giro parcial
+   ============================================================ */
+module junta_doble(
+    ancho_baqueta      = _ancho_baqueta,
+    distancia          = _distancia,
+    rot_a              = 90,
+    rot_b              = 0,
+    cantidad_tornillos = 2,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    difference() {
+        hull() {
+            rotate([0, rot_a, 90])
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    margen          = margen,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+            translate([distancia, 0, 0]) rotate([0, rot_b, 90])
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    margen          = margen,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+        }
+        rotate([0, rot_a, 90])
+            hueco_baqueta(
+                cantidad_tornillos = cantidad_tornillos,
+                profundidad_pieza  = profundidad_pieza,
+                diametro           = diametro,
+                margen             = margen,
+                poly_n             = poly_n,
+                familia_tuerca     = familia_tuerca,
+                subtipo_tuerca     = subtipo_tuerca,
+                medida_tornillo    = medida_tornillo
+            );
+        translate([distancia, 0, 0]) rotate([0, rot_b, 90])
+            hueco_baqueta(
+                cantidad_tornillos = cantidad_tornillos,
+                profundidad_pieza  = profundidad_pieza,
+                diametro           = diametro,
+                margen             = margen,
+                poly_n             = poly_n,
+                familia_tuerca     = familia_tuerca,
+                subtipo_tuerca     = subtipo_tuerca,
+                medida_tornillo    = medida_tornillo
+            );
     }
-    
-      
- translate([-100,-50,0])
-difference() {
- 
- hull(){
-    rotate([0,0,90])baqueta_solida(ancho_baqueta=ancho_baqueta);
-translate([distancia, 0,0])rotate([0,0,90])
-    baqueta_solida(ancho_baqueta=ancho_baqueta);
 }
 
-  rotate([0,0,90])
-hueco_baqueta(cantidad_tornillos=2);;
-translate([distancia, 0,0])rotate([0,0,90])
-    hueco_baqueta(cantidad_tornillos=2);
+
+/* ============================================================
+   JUNTA ARRAY
+   N baquetas en linea con cuatro modos de rotacion:
+     "gradual"       -> rotacion distribuida uniformemente en todos los elementos
+     "extremos"      -> extremos a rot_principal, cuerpo fijo a rot_cuerpo
+     "degrade"       -> extremos a rot_total, cuerpo graduado
+     "solo_extremos" -> hull solo entre los dos extremos, sin perforaciones intermedias
+                        (rot_a_extremo=0, rot_b_extremo=0, sep_extremos libre)
+   ============================================================ */
+module junta_array(
+    cantidad           = _cantidad,
+    distancia          = _distancia,
+    ancho_baqueta      = _ancho_baqueta,
+    rot_total          = 90,   // rango completo de rotacion (grados)
+    rot_principal      = 90,   // rotacion de extremos en modo "extremos"
+    rot_cuerpo         = 45,   // rotacion del cuerpo en modo "extremos"
+    modo               = "gradual",  // "gradual" | "extremos" | "degrade" | "solo_extremos"
+    rot_a_extremo      = 0,    // rotacion del primer extremo en modo "solo_extremos"
+    rot_b_extremo      = 0,    // rotacion del segundo extremo en modo "solo_extremos"
+    sep_extremos       = -1,   // separacion entre extremos en "solo_extremos" (-1 = distancia*cantidad)
+    cantidad_tornillos = 2,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    rot_parcial = rot_total / (cantidad - 1);
+
+    function rot_en(i) =
+        modo == "extremos"
+            ? ((i == 1 || i == cantidad) ? rot_principal : rot_cuerpo)
+        : modo == "degrade"
+            ? ((i == 1 || i == cantidad) ? rot_total : rot_parcial * i)
+        : // "gradual" y "solo_extremos" usan la misma distribucion gradual
+            rot_parcial * i;
+
+    if (modo == "solo_extremos") {
+        // Hull entre dos extremos; rot y separacion propios, independientes del array.
+        _sep = (sep_extremos < 0) ? distancia * cantidad : sep_extremos;
+        difference() {
+            hull() {
+                rotate([0, rot_a_extremo, 90])
+                    baqueta_solida(
+                        ancho_baqueta   = ancho_baqueta,
+                        diametro        = diametro,
+                        margen          = margen,
+                        poly_n          = poly_n,
+                        familia_tuerca  = familia_tuerca,
+                        subtipo_tuerca  = subtipo_tuerca,
+                        medida_tornillo = medida_tornillo
+                    );
+                translate([_sep, 0, 0])
+                    rotate([0, rot_b_extremo, 90])
+                        baqueta_solida(
+                            ancho_baqueta   = ancho_baqueta,
+                            diametro        = diametro,
+                            margen          = margen,
+                            poly_n          = poly_n,
+                            familia_tuerca  = familia_tuerca,
+                            subtipo_tuerca  = subtipo_tuerca,
+                            medida_tornillo = medida_tornillo
+                        );
+            }
+            rotate([0, rot_a_extremo, 90])
+                hueco_baqueta(
+                    cantidad_tornillos = cantidad_tornillos,
+                    profundidad_pieza  = profundidad_pieza,
+                    diametro           = diametro,
+                    margen             = margen,
+                    poly_n             = poly_n,
+                    familia_tuerca     = familia_tuerca,
+                    subtipo_tuerca     = subtipo_tuerca,
+                    medida_tornillo    = medida_tornillo
+                );
+            translate([_sep, 0, 0])
+                rotate([0, rot_b_extremo, 90])
+                    hueco_baqueta(
+                        cantidad_tornillos = cantidad_tornillos,
+                        profundidad_pieza  = profundidad_pieza,
+                        diametro           = diametro,
+                        margen             = margen,
+                        poly_n             = poly_n,
+                        familia_tuerca     = familia_tuerca,
+                        subtipo_tuerca     = subtipo_tuerca,
+                        medida_tornillo    = medida_tornillo
+                    );
+        }
+    } else {
+        difference() {
+            hull()
+                for (i = [1:cantidad])
+                    translate([distancia * i, 0, 0])
+                        rotate([0, rot_en(i), 90])
+                            baqueta_solida(
+                                ancho_baqueta   = ancho_baqueta,
+                                diametro        = diametro,
+                                margen          = margen,
+                                poly_n          = poly_n,
+                                familia_tuerca  = familia_tuerca,
+                                subtipo_tuerca  = subtipo_tuerca,
+                                medida_tornillo = medida_tornillo
+                            );
+            for (i = [1:cantidad])
+                translate([distancia * i, 0, 0])
+                    rotate([0, rot_en(i), 90])
+                        hueco_baqueta(
+                            cantidad_tornillos = cantidad_tornillos,
+                            profundidad_pieza  = profundidad_pieza,
+                            diametro           = diametro,
+                            margen             = margen,
+                            poly_n             = poly_n,
+                            familia_tuerca     = familia_tuerca,
+                            subtipo_tuerca     = subtipo_tuerca,
+                            medida_tornillo    = medida_tornillo
+                        );
+        }
     }
- 
- translate([-100,50,0])
-difference() {
- 
- hull(){
-    rotate([0,90,90])baqueta_solida(ancho_baqueta=ancho_baqueta);
-translate([distancia, 0,0])rotate([0,rotacion,90])
-    baqueta_solida(ancho_baqueta=ancho_baqueta);
 }
 
-  rotate([0,90,90])
-hueco_baqueta(cantidad_tornillos=2);;
-translate([distancia, 0,0])rotate([0,rotacion,90])
-    hueco_baqueta(cantidad_tornillos=2);
+
+/* ============================================================
+   JUNTA T
+   Dos baquetas perpendiculares; el segundo brazo gira 90 en Y.
+   cantidad_main: tornillos en el brazo principal
+   cantidad_rama: tornillos en el brazo transversal
+   ============================================================ */
+module junta_T(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    cantidad_main      = 2,
+    cantidad_rama      = 1,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    difference() {
+        hull() {
+            baqueta_solida(
+                ancho_baqueta   = ancho_baqueta,
+                diametro        = diametro,
+                margen          = margen,
+                poly_n          = poly_n,
+                familia_tuerca  = familia_tuerca,
+                subtipo_tuerca  = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+            translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    margen          = margen,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+        }
+        hueco_baqueta(
+            cantidad_tornillos    = cantidad_main,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            margen                = margen,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+        translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
+            hueco_baqueta(
+                cantidad_tornillos    = cantidad_rama,
+                profundidad_pieza     = profundidad_pieza,
+                largo_hueco_principal = ancho_baqueta,
+                diametro              = diametro,
+                margen                = margen,
+                poly_n                = poly_n,
+                familia_tuerca        = familia_tuerca,
+                subtipo_tuerca        = subtipo_tuerca,
+                medida_tornillo       = medida_tornillo
+            );
     }
- 
-    
- //array
-    //TODO: altaerna entre rotacion y no rotacion, y solo rotar n posiciones (ej extremos o uno en especifico)
-    rotTotal=90;
-   rotParcial= rotTotal/(cantidad-1);
-    translate([100,0,0]){
- difference() {
-  hull(){
- for (i =[1:cantidad]){translate([distancia*i, 0,0])
-  rotate([0,rotParcial*i,90])
-    baqueta_solida(ancho_baqueta=ancho_baqueta);
-}}
-
- for (i =[1:cantidad]){translate([distancia*i, 0,0])
-  
-  rotate([0,rotParcial*i,90])
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20);
-  }}
- }
- 
- rotacionPrincipal =90;
- rotacionCuerpo= 45;
-   //array y 2 tipos de angulsoangulos
-    //TODO: altaerna entre rotacion y no rotacion, y solo rotar n posiciones (ej extremos o uno en especifico)
-//        rotTotal=90;
-//   rotParcial= rotTotal/(cantidad-1);
-    translate([100,-150,0]){
- difference() {
-  hull(){
- for (i =[1:cantidad]){translate([distancia*i, 0,0]){
-rotate([0, (i==1 || i==cantidad) ? rotacionPrincipal : rotacionCuerpo, 90])
-     baqueta_solida(ancho_baqueta=ancho_baqueta);
- }
-}
-}
- for (i =[1:cantidad]){translate([distancia*i, 0,0]){
-rotate([0, (i==1 || i==cantidad) ? rotacionPrincipal :rotacionCuerpo , 90])
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20);
- 
- }}
- }
 }
 
 
-   //array y degrade de angulos
-    //TODO: altaerna entre rotacion y no rotacion, y solo rotar n posiciones (ej extremos o uno en especifico)
-//        rotTotal=90;
-//   rotParcial= rotTotal/(cantidad-1);
-    translate([100,-250,0]){
- difference() {
-  hull(){
- for (i =[1:cantidad]){translate([distancia*i, 0,0]){
-rotate([0, (i==1 || i==cantidad) ? rotTotal : rotParcial*i, 90])
-     baqueta_solida(ancho_baqueta=ancho_baqueta);
- }
-}
-}
- for (i =[1:cantidad]){translate([distancia*i, 0,0]){
-rotate([0, (i==1 || i==cantidad) ? rotTotal : rotParcial*i, 90])
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20);
- 
- }}
- }
-}
- 
- //angulo variable
-//difference() {
-// 
-// hull(){
-//    rotate([0,0,90])baqueta_solida(ancho_baqueta=ancho_baqueta);
-//translate([distancia, 0,0])rotate([0,rotacion,90])
-//    baqueta_solida(ancho_baqueta=ancho_baqueta);
-//}
-//
-//  rotate([0,0,90]) hueco_baqueta(cantidad_tornillos=2);;
-//translate([distancia, 0,0])rotate([0,rotacion,90])
-//     hueco_baqueta(cantidad_tornillos=2);
-//    }
-//    
-    
-    // a 90 grados
-//difference() {
-// 
-// hull(){
-//    rotate([0,90,90])baqueta_solida(ancho_baqueta=ancho_baqueta);
-//translate([distancia, 0,0])rotate([0,0,90])
-//    baqueta_solida(ancho_baqueta=ancho_baqueta);
-//}
-//
-//  rotate([0,90,90]) hueco_baqueta(cantidad_tornillos=2);;
-//translate([distancia, 0,0])rotate([0,0,90])
-//     hueco_baqueta(cantidad_tornillos=2);
-//    }
-
-
-
- //junta T
-
-  desface_centro = [0,0,-5];
- translate([100,100,0]){
-   difference() {
-
- hull(){
-baqueta_solida(ancho_baqueta=60);
-  translate([ancho_baqueta, 0, 0.0])rotate([0,90,0])
-baqueta_solida(ancho_baqueta=60);
-}
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=60,desface_centro=desface_centro);
-  translate([ancho_baqueta, 0, 0.0])rotate([0,90,0])
- hueco_baqueta(cantidad_tornillos=1,profundidad_pieza=20,largo_hueco_principal=60);
-}
-
-}
-
-//union lineal
-desface_centro = [0,0,-5];
- translate([300,100,0]){
-   difference() {
-
- hull(){
-baqueta_solida(ancho_baqueta=60);
-  translate([ancho_baqueta, 0, 0.0])
-baqueta_solida(ancho_baqueta=60);
-}
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=ancho_baqueta,desface_centro=desface_centro);
-  translate([ancho_baqueta, 0, 0.0])
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=ancho_baqueta,desface_centro=-ancho_baqueta);
-}
-
-}
-ancho_baqueta=60;
- translate([300,150,0])
-
-translate([ancho_baqueta, 0, 0.0])
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=ancho_baqueta,desface_centro=-ancho_baqueta);
-
-
-//Terminal / tapon
-translate([300,200,0]){
-   difference() {
-
-baqueta_solida(ancho_baqueta=60);
-
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=ancho_baqueta,desface_centro=desface_centro);
-  
-}
-
+/* ============================================================
+   UNION LINEAL
+   Dos baquetas colineales con sus huecos descentrados hacia
+   la junta (desface_centro opuesto en cada extremo).
+   ============================================================ */
+module union_lineal(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    cantidad_tornillos = 2,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    difference() {
+        hull() {
+            baqueta_solida(
+                ancho_baqueta   = ancho_baqueta,
+                diametro        = diametro,
+                margen          = margen,
+                poly_n          = poly_n,
+                familia_tuerca  = familia_tuerca,
+                subtipo_tuerca  = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+            translate([ancho_baqueta, 0, 0])
+                baqueta_solida(
+                    ancho_baqueta   = ancho_baqueta,
+                    diametro        = diametro,
+                    margen          = margen,
+                    poly_n          = poly_n,
+                    familia_tuerca  = familia_tuerca,
+                    subtipo_tuerca  = subtipo_tuerca,
+                    medida_tornillo = medida_tornillo
+                );
+        }
+        hueco_baqueta(
+            cantidad_tornillos    = cantidad_tornillos,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            margen                = margen,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+        translate([ancho_baqueta, 0, 0])
+            hueco_baqueta(
+                cantidad_tornillos    = cantidad_tornillos,
+                profundidad_pieza     = profundidad_pieza,
+                largo_hueco_principal = ancho_baqueta,
+                desface_centro        = [0, 0, -ancho_baqueta],
+                diametro              = diametro,
+                margen                = margen,
+                poly_n                = poly_n,
+                familia_tuerca        = familia_tuerca,
+                subtipo_tuerca        = subtipo_tuerca,
+                medida_tornillo       = medida_tornillo
+            );
+    }
 }
 
 
-//op con cosas
-desface_centro = [0,0,-5];
-d=22;
-r=d/2;
-translate([300,200,0]){
-   difference() {
-//hull
-union(){
-baqueta_solida(ancho_baqueta=60);
- translate([ancho_baqueta*0.75-r+desface_centro[2], 0, 0.0]) //no entiendo por que le clavo el .75 y funciona
-sphere(d);
+/* ============================================================
+   TERMINAL / TAPON
+   Un solo extremo de baqueta, cerrado.
+   ============================================================ */
+module terminal(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    cantidad_tornillos = 2,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    difference() {
+        baqueta_solida(
+            ancho_baqueta   = ancho_baqueta,
+            diametro        = diametro,
+            margen          = margen,
+            poly_n          = poly_n,
+            familia_tuerca  = familia_tuerca,
+            subtipo_tuerca  = subtipo_tuerca,
+            medida_tornillo = medida_tornillo
+        );
+        hueco_baqueta(
+            cantidad_tornillos    = cantidad_tornillos,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            margen                = margen,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+    }
 }
- hueco_baqueta(cantidad_tornillos=2,profundidad_pieza=20,largo_hueco_principal=ancho_baqueta,desface_centro=desface_centro);
-  
+
+
+/* ============================================================
+   TERMINAL CON ESFERA
+   Terminal con refuerzo esferico en el extremo de la junta.
+   d_esfera: diametro de la esfera de refuerzo (mm).
+   ============================================================ */
+module terminal_esfera(
+    ancho_baqueta      = 60,
+    desface_centro     = [0, 0, -5],
+    d_esfera           = 22,
+    cantidad_tornillos = 2,
+    profundidad_pieza  = _profundidad,
+    diametro           = _diametro,
+    margen             = _margen,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo
+) {
+    r_esfera = d_esfera / 2;
+    difference() {
+        union() {
+            baqueta_solida(
+                ancho_baqueta   = ancho_baqueta,
+                diametro        = diametro,
+                margen          = margen,
+                poly_n          = poly_n,
+                familia_tuerca  = familia_tuerca,
+                subtipo_tuerca  = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+            translate([ancho_baqueta * 0.75 - r_esfera + desface_centro[2], 0, 0])
+                sphere(d_esfera);
+        }
+        hueco_baqueta(
+            cantidad_tornillos    = cantidad_tornillos,
+            profundidad_pieza     = profundidad_pieza,
+            largo_hueco_principal = ancho_baqueta,
+            desface_centro        = desface_centro,
+            diametro              = diametro,
+            margen                = margen,
+            poly_n                = poly_n,
+            familia_tuerca        = familia_tuerca,
+            subtipo_tuerca        = subtipo_tuerca,
+            medida_tornillo       = medida_tornillo
+        );
+    }
 }
 
-}
 
-//cruz
-//    translate([100,100,0]){
-// difference() {
-//
-// hull(){
-//    baqueta_solida(ancho_baqueta=60);
-//translate([0, 0, 0.0])rotate([0,90,90])
-//    baqueta_solida(ancho_baqueta=60);
-//}
-//     hueco_baqueta(cantidad_tornillos=2);
-//
-// translate([0, 0, 0.0])rotate([0,90,90])
-//    hueco_baqueta(cantidad_tornillos=4,profundidad_pieza=20);
-// }
-//}
+/* ============================================================
+   DEMO
+   Una instancia de cada junta con los valores por defecto.
+   ============================================================ */
 
-//
-// hull(){
-//    rotate([0,90,90])baqueta_solida(ancho_baqueta=60);
-//translate([0, 0, 0.0])rotate([0,0,90])
-//    baqueta_solida(ancho_baqueta=60);
-//}
-// difference() {
-//
-// hull(){
-//    baqueta_solida(ancho_baqueta=60);
-//translate([diametro, 0, 0.0])rotate([0,90,90])
-//    baqueta_solida(ancho_baqueta=60);
-//}
-//     hueco_baqueta(cantidad_tornillos=2);
-//
-// translate([diametro, 0, 0.0])rotate([0,90,90])
-//    hueco_baqueta(cantidad_tornillos=2);
-// }
+// Doble perpendicular (rot_a=90, rot_b=0, default)
+junta_doble();
 
- //color("#aa0000")cylinder(h = altura, d=diametro, center = true, $fn=poly_n);
- // translate([0, 10, 0.0])
-////hull(){
-////cylinder(h = altura, d=diametro, center = true, $fn=poly_n); 
-////translate([diametro, 0, 0.0])rotate([0,90,90])
-////cylinder(h = altura, d=diametro, center = true, $fn=poly_n); 
-////}
-  
-  
-  
- 
- //T
-// hull(){
-//cylinder(h = altura, d=diametro, center = true, $fn=poly_n); 
-//translate([diametro, 0, 0.0])rotate([0,90,0])
-//cylinder(h = altura, d=diametro, center = true, $fn=poly_n); 
-//}
-  
- 
-//difference(){
-//hull(){
-//  cylinder(h = altura, d=diametro, center = true, $fn=poly_n); 
-//  translate([radio, 0, 0.0])
-//  cube([2,2,altura],center = true);
-// }
-//    cylinder(h = altura, d=diametro*.5, center = true, $fn=poly_n);
-//}
-//
-//translate([10+radio+1, 0, 0.0]){
-// difference(){
-//hull(){
-//   cylinder(h = altura, d=diametro, center = true, $fn=poly_n);
-//  translate([-radio, 0, 0.0])
-//  cube([2,2,altura],center = true);
-// }
-//   cylinder(h = altura, d=diametro*.5, center = true, $fn=poly_n);
-//}}
+// Doble en linea (ambos a 0)
+translate([-100, -50, 0])
+    junta_doble(rot_a = 0, rot_b = 0);
 
+// Doble con giro parcial (120)
+translate([-100, 50, 0])
+    junta_doble(rot_a = 90, rot_b = 120);
+
+// Array gradual (rotacion distribuida uniformemente)
+translate([100, 0, 0])
+    junta_array(modo = "gradual");
+
+// Array extremos (extremos 90, cuerpo 45)
+translate([100, -150, 0])
+    junta_array(modo = "extremos");
+
+// Array degrade (extremos a rot_total, cuerpo graduado)
+translate([100, -250, 0])
+    junta_array(modo = "degrade");
+
+// Array solo extremos: hull entre el primero y el ultimo, sin perforaciones intermedias
+translate([100, -350, 0])
+    junta_array(modo = "solo_extremos");
+
+// Junta T
+translate([100, 100, 0])
+    junta_T();
+
+// Union lineal
+translate([300, 100, 0])
+    union_lineal();
+
+// Terminal / tapon
+translate([300, 200, 0])
+    terminal();
+
+// Terminal con esfera
+translate([300, 300, 0])
+    terminal_esfera();
