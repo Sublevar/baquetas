@@ -66,13 +66,16 @@ function cabeza_tornillo_americano(D_pulg) =
 module avellanado_cilindrico_americano(
     diametro_rosca_pulg,
     profundidad_avellano,
-    holgura = 0.3
+    holgura = 0.3,
+    altura_extra = 0,        // Altura adicional del avellanado en mm
+    offset_z = 0             // Desplazamiento vertical en mm (default 0)
 ) {
     datos = cabeza_tornillo_americano(diametro_rosca_pulg);
     diametro_cabeza = datos[0];
+    altura_total = profundidad_avellano + altura_extra;
 
-    translate([0, 0, 0])
-        cylinder(h = profundidad_avellano,
+    translate([0, 0, offset_z])
+        cylinder(h = altura_total,
                  r = (diametro_cabeza/2) + holgura);
 }
 
@@ -84,17 +87,19 @@ module agujero_pasante_americano(
     profundidad,
     profundidad_avellano = 0,
     holgura = 0.5,
-    profundidad_abs = true
+    profundidad_abs = true,
+    altura_extra = 0,        // Altura adicional del agujero en mm
+    offset_z = 0             // Desplazamiento vertical en mm (default 0)
 ) {
     diametro_rosca_mm = pulg_a_mm_am(diametro_rosca_pulg);
 
     if (profundidad_abs)
-        translate([0, 0, profundidad_avellano])
-            cylinder(h = profundidad - profundidad_avellano,
+        translate([0, 0, profundidad_avellano + offset_z])
+            cylinder(h = profundidad - profundidad_avellano + altura_extra,
                      r = (diametro_rosca_mm/2) + holgura);
     else
-        translate([0, 0, profundidad_avellano])
-            cylinder(h = profundidad,
+        translate([0, 0, profundidad_avellano + offset_z])
+            cylinder(h = profundidad + altura_extra,
                      r = (diametro_rosca_mm/2) + holgura);
 }
 
@@ -107,12 +112,18 @@ module agujero_con_avellanado_americano(
     profundidad_pieza,
     holgura_avellano = 0.3,
     holgura_pasante = 0.5,
-    profundidad_abs = true
+    profundidad_abs = true,
+    altura_extra = 0,        // Altura adicional del avellanado en mm
+    offset_z = 0,            // Desplazamiento vertical en mm (default 0)
+    altura_extra_pasante = 0,// Altura adicional del agujero en mm
+    offset_z_pasante = 0     // Desplazamiento vertical del agujero en mm (default 0)
 ) {
     avellanado_cilindrico_americano(
         diametro_rosca_pulg = diametro_rosca_pulg,
         profundidad_avellano = profundidad_avellano,
-        holgura = holgura_avellano
+        holgura = holgura_avellano,
+        altura_extra = altura_extra,
+        offset_z = offset_z
     );
 
     agujero_pasante_americano(
@@ -120,7 +131,9 @@ module agujero_con_avellanado_americano(
         profundidad = profundidad_pieza,
         profundidad_avellano = profundidad_avellano,
         holgura = holgura_pasante,
-        profundidad_abs = profundidad_abs
+        profundidad_abs = profundidad_abs,
+        altura_extra = altura_extra_pasante,
+        offset_z = offset_z_pasante
     );
 }
 

@@ -2,7 +2,6 @@
 // CALCULADORA DE AVELLANADO - TORNILLOS WHITWORTH (BSW)
 // El diámetro de rosca se ingresa en PULGADAS (decimal)
 // Ej: 1/4" = 0.25 , 3/8" = 0.375 , 1/2" = 0.5
-// Versión cilindro recto - DEMO 3D
 // =====================================================
 
 PULGADA = 25.4; // mm por pulgada
@@ -95,48 +94,7 @@ function diametro_cabeza_whitworth(D_pulg) = cabeza_tornillo_whitworth(D_pulg)[0
 function altura_cabeza_whitworth(D_pulg) = cabeza_tornillo_whitworth(D_pulg)[1];
 
 // =====================================================
-// DEMO 3D: placa con 3 avellanados de distinto diámetro
-// margen de corte para evitar z-fighting en el booleano
+// EJEMPLO: tornillo Whitworth 5/16" (0.3125"), avellanado
+// de 4.5mm de profundidad, pieza de 9.5mm de espesor
 // =====================================================
-margen_corte_wh = 0.5;
-espesor_placa_wh = 12;   // mm - grosor de la placa demo
-ancho_placa_wh   = 100;
-largo_placa_wh   = 40;
-
-module placa_demo_whitworth() {
-    difference() {
-        // Placa base
-        translate([-10, -largo_placa_wh/2, 0])
-            cube([ancho_placa_wh, largo_placa_wh, espesor_placa_wh]);
-
-        // Tornillo Whitworth 3/16", entra por la cara superior
-        translate([10, 0, espesor_placa_wh])
-            rotate([0, 180, 0])
-                agujero_con_avellanado_whitworth(
-                    diametro_rosca_pulg = 3/16,
-                    profundidad_avellano = 3.0,
-                    profundidad_pieza = espesor_placa_wh + margen_corte_wh
-                );
-
-        // Tornillo Whitworth 1/4", entra por la cara superior
-        translate([40, 0, espesor_placa_wh])
-            rotate([0, 180, 0])
-                agujero_con_avellanado_whitworth(
-                    diametro_rosca_pulg = 1/4,
-                    profundidad_avellano = 4.0,
-                    profundidad_pieza = espesor_placa_wh + margen_corte_wh
-                );
-
-        // Tornillo Whitworth 5/16", entra por la cara inferior
-        // (demuestra profundidad_abs = false)
-        translate([70, 0, 0])
-            agujero_con_avellanado_whitworth(
-                diametro_rosca_pulg = 5/16,
-                profundidad_avellano = 4.5,
-                profundidad_pieza = espesor_placa_wh + margen_corte_wh,
-                profundidad_abs = false
-            );
-    }
-}
-
-placa_demo_whitworth();
+agujero_con_avellanado_whitworth(5/16, 4.5, 9.5);

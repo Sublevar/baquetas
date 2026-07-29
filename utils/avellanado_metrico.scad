@@ -23,18 +23,15 @@ function cabeza_tornillo(D) =
 module avellanado_cilindrico(
     diametro_rosca,          // Diámetro del tornillo en mm
     profundidad_avellano,    // Profundidad del avellanado en mm
-    holgura = 0.3,           // Holgura para el diámetro
-    altura_extra = 0,        // Altura adicional del avellanado en mm
-    offset_z = 0             // Desplazamiento vertical en mm (default 0)
+    holgura = 0.3            // Holgura para el diámetro
 ) {
     // Obtener dimensiones de la cabeza
     datos = cabeza_tornillo(diametro_rosca);
     diametro_cabeza = datos[0];
-    altura_total = profundidad_avellano + altura_extra;
     
     // Crear el cilindro del avellanado
-    translate([0, 0, offset_z]) 
-        cylinder(h = altura_total, 
+    translate([0, 0, 0]) 
+        cylinder(h = profundidad_avellano, 
                  r = (diametro_cabeza/2) + holgura);
 }
 
@@ -46,19 +43,17 @@ module agujero_pasante(
     profundidad,       // Profundidad total del agujero (grosor de la pieza)
     profundidad_avellano=0,// suma del hueco de avellanado
     holgura = 0.5,            // Holgura para el diámetro
-    profundidad_abs=true,
-    altura_extra_pasante = 0,// Altura adicional del agujero en mm
-    offset_z_pasante = 0     // Desplazamiento vertical del agujero en mm (default 0)
+    profundidad_abs=true
 ) {
   if(profundidad_abs)
-   translate([0, 0, profundidad_avellano + offset_z_pasante]) 
-        cylinder(h = profundidad - profundidad_avellano + altura_extra_pasante , 
+   translate([0, 0, profundidad_avellano]) 
+        cylinder(h = profundidad -profundidad_avellano , 
                  r = (diametro_rosca/2) + holgura);
   
    else
     // Crear agujero cilíndrico pasante
-    translate([0, 0, profundidad_avellano + offset_z_pasante]) 
-        cylinder(h = profundidad + altura_extra_pasante, 
+    translate([0, 0, profundidad_avellano]) 
+        cylinder(h = profundidad, 
                  r = (diametro_rosca/2) + holgura);
   
 }
@@ -73,18 +68,12 @@ module agujero_con_avellanado(
     holgura_avellano = 0.3,  // Holgura para el avellanado
     holgura_pasante = 0.5,    // Holgura para el agujero pasante
     profundidad_abs=true,
-    altura_extra = 0,        // Altura adicional del avellanado en mm
-    offset_z = 0,            // Desplazamiento vertical en mm (default 0)
-    altura_extra_pasante = 0,// Altura adicional del agujero en mm
-    offset_z_pasante = 0     // Desplazamiento vertical del agujero en mm (default 0)
 ) {
     // Avellanado (cilindro recto)
    avellanado_cilindrico(
         diametro_rosca = diametro_rosca,
         profundidad_avellano = profundidad_avellano,
-        holgura = holgura_avellano,
-        altura_extra = altura_extra,
-        offset_z = offset_z
+        holgura = holgura_avellano
     );
   
     // Agujero pasante (desde el fondo del avellanado hasta el final)
@@ -93,9 +82,7 @@ module agujero_con_avellanado(
             profundidad = profundidad_pieza ,
             profundidad_avellano= profundidad_avellano,
             holgura = holgura_pasante,
-            profundidad_abs=profundidad_abs,
-            altura_extra_pasante = altura_extra_pasante,
-            offset_z_pasante = offset_z_pasante
+            profundidad_abs=profundidad_abs
         );
 }
 
