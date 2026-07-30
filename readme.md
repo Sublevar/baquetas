@@ -1,6 +1,10 @@
 # Baquetas
 ## Sistema modula de acoples (impresos 3D) para varillas de madera
 
+
+## consejos dei mpresion
+para pico 0.4 o menos holguras de 0.5 mm estan bien
+para picos de 0.8 esrecomendabl e subir la holgura
 ## premisas
 + los acoples son imprimibles y modulares.
 

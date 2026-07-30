@@ -407,14 +407,28 @@ module terminal(
 
 
 /* ============================================================
-   TERMINAL CON ESFERA
-   Terminal con refuerzo esferico en el extremo de la junta.
-   d_esfera: diametro de la esfera de refuerzo (mm).
+   TERMINAL CON EXTREMO GENÉRICO
+   El children() define la forma del extremo/capuchón.
+
+   alinear:
+     "extremo"  -> origen del children() se ubica en la cara
+                   exterior del cuerpo (x = ancho_baqueta/2).
+                   Útil para esferas centradas en ese plano.
+     "centrado" -> origen del children() coincide con el centro
+                   del cuerpo (x = 0). Posicionamiento manual.
+
+   cortar_cuerpo (default: false):
+     false -> union simple: baqueta_solida + children().
+              Solo se resta hueco_baqueta (comportamiento por defecto).
+     true  -> adicionalmente recorta la parte del children() que
+              quedaría dentro del cuerpo (x < extremo_x), dejando
+              solo el capuchón que sobresale.
    ============================================================ */
-module terminal_esfera(
+module terminal_cosa(
     ancho_baqueta      = 60,
     desface_centro     = [0, 0, -5],
-    d_esfera           = 22,
+    alinear            = "extremo",   // "extremo" | "centrado"
+    cortar_cuerpo      = true,
     cantidad_tornillos = 2,
     profundidad_pieza  = _profundidad,
     diametro           = _diametro,
@@ -424,7 +438,9 @@ module terminal_esfera(
     subtipo_tuerca     = _subtipo_tuerca,
     medida_tornillo    = _medida_tornillo
 ) {
-    r_esfera = d_esfera / 2;
+    extremo_x = ancho_baqueta / 2;
+    offset_x  = (alinear == "extremo") ? extremo_x : 0;
+
     difference() {
         union() {
             baqueta_solida(
@@ -436,8 +452,16 @@ module terminal_esfera(
                 subtipo_tuerca  = subtipo_tuerca,
                 medida_tornillo = medida_tornillo
             );
-            translate([ancho_baqueta * 0.75 - r_esfera + desface_centro[2], 0, 0])
-                sphere(d_esfera);
+            if (cortar_cuerpo) {
+                // Solo la parte del children() que sobresale del extremo.
+                difference() {
+                    translate([offset_x, 0, 0]) children();
+                    translate([extremo_x - 500, 0, 0]) cube(1000, center = true);
+                }
+            } else {
+                // Union directa: el children() se superpone libremente con el cuerpo.
+                translate([offset_x, 0, 0]) children();
+            }
         }
         hueco_baqueta(
             cantidad_tornillos    = cantidad_tornillos,
@@ -499,6 +523,15 @@ translate([300, 100, 0])
 translate([300, 200, 0])
     terminal();
 
-// Terminal con esfera
+// Terminal con extremo esférico (union directa, default)
 translate([300, 300, 0])
-    terminal_esfera();
+    terminal_cosa()
+        sphere(
+            d  = grosor_baqueta(_diametro, _holgura_a, _familia_tuerca, _subtipo_tuerca, _medida_tornillo),
+            $fn = _poly_n
+        );
+
+// Terminal con extremo cilíndrico (con recorte del lado del cuerpo activado)
+translate([300, 400, 0])
+    terminal_cosa(cortar_cuerpo = true)
+        cylinder(r = 20, h = 22);
