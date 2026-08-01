@@ -8,8 +8,8 @@ use <hueco_baqueta.scad>
 
 // Baqueta / eje
 _diametro        = 24;     // diametro interior del eje (mm)
-_holgura_a       = 0.5;    // holgura radial extremo A
-_holgura_b       = 0.5;    // holgura radial extremo B
+_holgura_a       = 0.75;    // holgura radial extremo A
+_holgura_b       = 1.0;    // holgura radial extremo B
 _poly_n          = 16;     // resolucion de circulos
 _ancho_baqueta   = 40;     // longitud del cilindro macizo (mm)
 
