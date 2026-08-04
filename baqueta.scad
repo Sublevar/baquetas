@@ -11,6 +11,8 @@
 //    hueco_baqueta(cantidad_tornillos=2);
 //}
 use <juntas.scad>;
+// holgura para pico de 0.8 en bambu a1l version extra draft custom
+holgura_a       = 1.25;    // holgura radial extremo A
+holgura_b       = 1.5;    // holgura radial extremo B
 
-
-junta_doble();
+junta_doble(holgura_a=holgura_a, holgura_b=holgura_b);
