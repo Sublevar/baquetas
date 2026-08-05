@@ -12,7 +12,7 @@
 //}
 use <juntas.scad>;
 // holgura para pico de 0.8 en bambu a1l version extra draft custom
-holgura_a       = 1.25;    // holgura radial extremo A
-holgura_b       = 1.5;    // holgura radial extremo B
+holgura_a       = 1.25;    // holgura radial extremo A  //puede reducirse .1
+holgura_b       = 1.5;    // holgura radial extremo B //puede apliarse .1 (aunque as iesta holdado muy finamente
 
 junta_doble(holgura_a=holgura_a, holgura_b=holgura_b);
