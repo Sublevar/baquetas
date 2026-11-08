@@ -40,6 +40,15 @@ LISTA=(
   apoyos/pared_paralelo:pared_paralelo
   apoyos/estante_un_brazo:estante_un_brazo
   apoyos/estante_esquinero:estante_esquinero
+  diagonales/diagonal_45:diagonal_45
+  diagonales/diagonal_45_doble:diagonal_45_doble
+  diagonales/diagonal_135:diagonal_135
+  diagonales/brazo:brazo
+  diagonales/brazo_esquinero:brazo_esquinero
+  tripodes/hub_3_patas:tripode_3
+  tripodes/hub_4_patas:tripode_4
+  tripodes/punta_pata_25:punta_pata_25
+  tripodes/punta_pata_20:punta_pata_20
 )
 
 fallos=0

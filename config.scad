@@ -39,3 +39,7 @@ _medida_tornillo = 0.1875;      // pulgadas para UNC/UNF/whitworth; mm para metr
 
 // Grosor de material para alojar tornillo (profundidad_pieza)
 _profundidad     = 20;
+
+// Pared minima entre dos huecos de baqueta que se acercan (mm).
+// Con pico 0.8 conviene >= 2 perimetros (1.6 mm); 3 queda comodo.
+_pared_min       = 3;

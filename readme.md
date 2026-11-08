@@ -10,14 +10,25 @@ para picos de 0.8 esrecomendabl e subir la holgura
 + `config.scad`: valores comunes y perfiles de impresion (`pico04`, `pico08`)
 + `juntas.scad`, `hirth.scad`, `hirth_plano.scad`, `patas.scad`, `apoyos.scad`: piezas (cada una trae una demo al abrirla)
 + `hueco_baqueta.scad` y `utils/`: huecos, tuercas y avellanados
++ `diagonales.scad`: acoples con diagonal a cualquier angulo y brazos (angulo 90)
++ `tripodes.scad`: hub de patas (`pie_tripode`) y zapata (`punta_pata`)
++ `calculadora.scad` + `calcular.sh`: largos de varilla y angulos (hipotenusa = adyacente / cos)
++ `utils/trigonometria.scad`: funciones de la calculadora y de las distancias minimas
 + `piezas.scad` + `build.sh`: exportan un STL por pieza en `stl/<perfil>/<tipo>/`
 
         ./build.sh              # todas, perfil pico04
         ./build.sh pico08       # todas, perfil pico08
         ./build.sh pico08 hirth_A   # una sola pieza
 
+### calculadora
+        ./calcular.sh diagonal dx=600 dz=400            # puntal entre poste y travesano
+        ./calcular.sh diagonal angulo=40 dx=600
+        ./calcular.sh cruz dx=800 dz=600                # diagonales de un marco
+        ./calcular.sh tripode altura=700 apertura=20 patas=3
+        ./calcular.sh diagonal dx=600 dz=400 _perfil=pico08
+
 + `bambu/`: proyecto y STL de Bambu Studio
-+ `investigaciones/`: ideas y codigo apartado para retomar
++ `investigaciones/`: ideas y codigo apartado para retomar; `alternativas_sin_tornillo.md` documenta los mecanismos deslizables
 ## premisas
 + los acoples son imprimibles y modulares.
 

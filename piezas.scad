@@ -4,6 +4,8 @@ use <hirth.scad>
 use <hirth_plano.scad>
 use <patas.scad>
 use <apoyos.scad>
+use <diagonales.scad>
+use <tripodes.scad>
 
 /* ============================================================
    SELECTOR DE PIEZAS
@@ -44,5 +46,19 @@ else if (pieza == "pared_perpendicular")     acople_pared();
 else if (pieza == "pared_paralelo")          acople_pared(modo = "paralelo", largo = 70);
 else if (pieza == "estante_un_brazo")        apoyo_estante();
 else if (pieza == "estante_esquinero")       apoyo_estante(brazos = [0, 90]);
+
+
+// --- diagonales y brazos (angulo desde el poste; ver diagonales.scad) ---
+else if (pieza == "diagonal_45")             acople_diagonal(angulo = 45);
+else if (pieza == "diagonal_45_doble")       acople_diagonal(angulo = 45, azimuts = [0, 180]);
+else if (pieza == "diagonal_135")            acople_diagonal(angulo = 135);
+else if (pieza == "brazo")                   acople_brazo();
+else if (pieza == "brazo_esquinero")         acople_brazo(azimuts = [0, 90]);
+
+// --- tripodes ---
+else if (pieza == "tripode_3")               pie_tripode(patas = 3, apertura = 25);
+else if (pieza == "tripode_4")               pie_tripode(patas = 4, apertura = 20);
+else if (pieza == "punta_pata_25")           punta_pata(apertura = 25);
+else if (pieza == "punta_pata_20")           punta_pata(apertura = 20);
 
 else echo(str("piezas.scad: pieza desconocida o sin elegir -> '", pieza, "'"));
