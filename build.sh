@@ -49,6 +49,20 @@ LISTA=(
   tripodes/hub_4_patas:tripode_4
   tripodes/punta_pata_25:punta_pata_25
   tripodes/punta_pata_20:punta_pata_20
+  sin_tornillo/calibre_palo:flexible_calibre
+  sin_tornillo/prueba_agarre:flexible_prueba
+  sin_tornillo/acople:flexible_acople
+  sin_tornillo/collar_deslizante:flexible_collar
+  sin_tornillo/tapon:flexible_tapon
+  sin_tornillo/cuna_ajuste:flexible_cuna
+  elementos/manguito_tope:elem_manguito_tope
+  elementos/hub_cruce:elem_hub_cruce
+  elementos/bandeja:elem_bandeja
+  elementos/canasto:elem_canasto
+  elementos/brazo_estante:elem_brazo_estante
+  elementos/multi_gancho:elem_multi_gancho
+  elementos/base:elem_base
+  elementos/tapa_plato:elem_tapa_plato
 )
 
 fallos=0

@@ -14,6 +14,8 @@ para picos de 0.8 esrecomendabl e subir la holgura
 + `tripodes.scad`: hub de patas (`pie_tripode`) y zapata (`punta_pata`)
 + `calculadora.scad` + `calcular.sh`: largos de varilla y angulos (hipotenusa = adyacente / cos)
 + `utils/trigonometria.scad`: funciones de la calculadora y de las distancias minimas
++ `sin_tornillo.scad` + `utils/flexion.scad`: acoples de brazos flexibles para palos de 22 a 24 mm no simetricos (ver `investigaciones/alternativas_sin_tornillo.md`, seccion 6)
++ `elementos_flex.scad`: manguito, hub de cruce, bandeja, canasto, brazo de estante, multi-gancho, base y tapa con plato; los parametros del palo estan en `config.scad` (`_palo_*`) y los puntos a probar marcados `PRUEBAS:`
 + `piezas.scad` + `build.sh`: exportan un STL por pieza en `stl/<perfil>/<tipo>/`
 
         ./build.sh              # todas, perfil pico04
@@ -26,6 +28,7 @@ para picos de 0.8 esrecomendabl e subir la holgura
         ./calcular.sh cruz dx=800 dz=600                # diagonales de un marco
         ./calcular.sh tripode altura=700 apertura=20 patas=3
         ./calcular.sh diagonal dx=600 dz=400 _perfil=pico08
+        ./calcular.sh flexible d_min=22 d_max=24 ovalidad=0.5 precarga=0.3   # acople sin tornillo
 
 + `bambu/`: proyecto y STL de Bambu Studio
 + `investigaciones/`: ideas y codigo apartado para retomar; `alternativas_sin_tornillo.md` documenta los mecanismos deslizables

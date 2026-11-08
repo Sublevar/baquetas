@@ -1,9 +1,10 @@
 # Alternativas al sistema: acoples deslizables sin tornillo
 
-Estado: **investigacion, nada implementado**. La linea principal del proyecto sigue
-siendo el acople con tornillo de presion + tuerca (`acople_cuerpo` / `acople_hueco`).
-Este documento deja anotadas las otras opciones para cuando se quiera ampliar a
-piezas que se deslicen o se traben sin tornillo (palo de escoba, por ejemplo).
+Estado: la linea principal del proyecto sigue siendo el acople con tornillo de presion
++ tuerca (`acople_cuerpo` / `acople_hueco`). Este documento deja anotadas las otras
+opciones para piezas que se deslicen o se traben sin tornillo.
+**Implementado:** la seccion 6 (brazos tangenciales flexibles para palos de 22 a 24 mm
+no simetricos, `sin_tornillo.scad`). **Solo investigado:** el resto (secciones 2 a 5).
 
 Convencion: **[fuente]** = dato tomado de las paginas consultadas (links al final).
 **[propuesta]** = idea de diseño propia, sin probar. Los valores numericos de las
@@ -92,7 +93,7 @@ Perforar el palo cada cierta distancia y trabar con un pasador. Un **trinquete (
 | # | Pieza | Equivale a | Reutiliza |
 |---|---|---|---|
 | 1 | Anillo / peine de calibracion | Calibration ring | `config.scad`, perfiles |
-| 2 | Collar de tope partido con cuña | Locking sleeve | `acople_diagonal` / `apoyo_estante` sin brazos |
+| 2 | Collar de tope partido con cuña | Locking sleeve | `acople_diagonal` / `apoyo_estante` sin brazos (hecho: `manguito_tope`) |
 | 3 | Hub de cruce pasante | Hanger Bar Hub | `junta_T`, `acople_brazo` |
 | 4 | Tapon a presion con nervios | End cap | `terminal` |
 | 5 | Perchas y ganchos | Multi Hook | `apoyos.scad` |
@@ -107,6 +108,122 @@ Perforar el palo cada cierta distancia y trabar con un pasador. Un **trinquete (
 - Nuevas columnas en `_perfiles` de `config.scad` para las holguras de deslizamiento y friccion por pico.
 - Pruebas: anillo de calibracion primero, despues collar partido, despues el resto.
 
+## 6. Implementado: palos de escoba de diametro variable (`sin_tornillo.scad`)
+
+Requisito: palos de **22 a 24 mm** y, ademas, **no del todo simetricos**. Un hueco rigido
+no sirve: o sobra juego en el palo fino o no entra el grueso. Hay que dejar que la pieza
+ceda segun el diametro local.
+
+### Que dicen las fuentes
+- **[fuente]** Un taco de madera comercial varia unos ±1/64" (~0.4 mm) y la ovalidad no
+  suele estar especificada; hay reportes de tacos ovalados por mas de 2 mm. Un palo de
+  escoba es peor que un taco. Por eso el diseño cubre el nominal **mas** una ovalidad.
+- **[fuente]** Las guias de snap-fit indican que un voladizo que flexa en Z (a traves de las
+  capas) pierde ~50 % de elongacion y 20-30 % de resistencia, y que conviene reducir el
+  limite de deformacion a la mitad en ese caso. (Dato tomado de un resumen de busqueda de
+  las guias tipo core77/Fictiv; no verificado en la pagina original.)
+- **[fuente]** Las flexiones tipo pinza permiten ajustes firmes sobre varillas, y el
+  centrado a 3 puntos es la solucion clasica para elementos irregulares.
+
+### Decision de diseño [propuesta]
+**Tres brazos tangenciales** (viga curva en voladizo) dentro de una camisa, cada uno con un
+resalte redondo en la punta que sobresale hacia el centro:
+- Cada brazo cede **por su cuenta**: copia el diametro local aunque el palo sea ovalado
+  (con el palo ovalado de 22 x 24 el material desplazado queda entre el del palo de 22 y
+  el de 24, ver mediciones).
+- Los brazos flexan **dentro del plano de capa** si se imprime con el eje vertical y la boca
+  hacia arriba: la flexion no carga las capas en Z.
+- 3 brazos = centrado estable a 3 puntos y brazos largos (23 mm de arco). Con 4 o mas
+  la deformacion supera el limite supuesto (2.5 % con 4, 4.8 % con 5).
+- Un tope fisico (la camisa) limita cuanto puede ceder el brazo, asi un palo demasiado
+  grueso no lo sobreestira de forma indefinida.
+
+### Parametros
+| Parametro | Valor | Efecto |
+|---|---|---|
+| `d_min`, `d_max` | 22, 24 mm | rango nominal del palo |
+| `ovalidad` | 0.5 mm | margen a cada lado para palos no simetricos (rango de diseño 21.5-24.5) |
+| `precarga` | 0.3 mm | apriete radial sobre el palo mas fino; sube el agarre y la fuerza minima |
+| `n_brazos` | 3 | cantidad de brazos |
+| `espesor_brazo` | 2.4 mm | 3 lineas de un pico 0.8; con pico 0.4 se puede bajar a 1.6 |
+| `largo_flex` | 30 mm | ancho del brazo = largo de la zona flexible |
+| `ancho_ranura` | 1.6 mm | separa la punta de un brazo del poste siguiente |
+
+`./calcular.sh flexible d_min=22 d_max=24 ovalidad=0.5 precarga=0.3` informa flecha,
+deformacion en la raiz, fuerza y agarre estimados, y avisa si se pasan los limites.
+
+### Piezas (`./build.sh` → `stl/<perfil>/sin_tornillo/`)
+`acople` (ciego), `collar_deslizante` (pasante, zona flexible en cada extremo), `tapon`,
+`cuna_ajuste`, `calibre_palo` y `prueba_agarre`. Todas salen de pie, boca hacia arriba.
+
+### Resultados de las verificaciones geometricas
+- Con el palo mas grueso (24.5 mm) el resalte se hunde 1.8 mm y el brazo, girado como solido
+  rigido hasta tocar el palo, queda a **0.59 mm de la camisa**: cabe dentro del alojamiento.
+- Material que desplaza el palo simulado: 21.0 mm → 1.5 mm³; 21.5 → 29; 22 → 74; 24 → 350;
+  24.5 → 435. Progresivo; con 21.0 no toca (por debajo del rango de diseño).
+- Estimaciones (supuestos E = 2000 N/mm², mu = 0.3): deformacion en la raiz **1.2 %** con el
+  palo mas grueso (limite supuesto 2 %); agarre axial **4.5 N** con el mas fino y **26.9 N**
+  con el mas grueso (relacion 6:1).
+
+### Limitaciones conocidas (leer antes de confiar)
+1. **Nada de esto esta probado impreso.** Fuerzas y limite de deformacion son supuestos;
+   el modulo de elasticidad efectivo del PETG impreso puede estar muy lejos de la hoja de datos.
+2. **Agarre bajo con el palo mas fino**: ~4.5 N alcanza para ganchos y topes livianos,
+   no para una pata que cargue peso. Subir `precarga` o usar la cuña de ajuste.
+3. El brazo esta unido al piso del alojamiento por su canto inferior, y eso lo vuelve mas
+   rigido que la viga recta del calculo (el agarre real puede ser mayor, y la flecha
+   efectiva menor). Corregir con la prueba.
+4. **Solo con eje vertical**: si el acople va inclinado dentro de otra pieza (diagonal, trípode)
+   el plano de flexion ya no coincide con las capas y se pierde la ventaja.
+5. La **cuña de ajuste** es una ayuda sin validar; el **collet cónico** con anillo roscado
+   no se implemento.
+6. Los perfiles `pico04`/`pico08` solo cambian el diametro exterior del cuerpo: el rango del
+   palo y la precarga se fijan con parametros, no con la holgura.
+
+### Protocolo de prueba (hacerlo antes de usarlo)
+1. Medir el palo real en 3 puntos con `calibre_palo` (pasa / no pasa) y girarlo para ver la ovalidad.
+2. Imprimir `prueba_agarre` (4 precargas, 1 a 4 muescas) y probar el palo mas fino y el mas grueso:
+   elegir la mas floja que aun agarra el fino y que el grueso entra sin forzar.
+3. Con esa precarga, subir `largo_flex` o `n_brazos` solo si el calculo lo permite.
+4. Despues del uso repetido (50 ciclos), revisar fisuras en la raiz de los brazos.
+
+## 7. Implementado: familia de elementos al estilo CHOIS (`elementos_flex.scad`)
+
+Piezas armadas sobre los brazos flexibles de la seccion 6. Se imprimen de pie, con la boca
+del palo hacia arriba y el plato o la brida contra la cama. Los parametros del palo estan
+en `config.scad` (`_palo_*`); los puntos a revisar tras imprimir estan marcados como
+`PRUEBAS:` dentro del archivo.
+
+| Pieza | Equivale a (CHOIS) | Huella x alto (mm) | Estado |
+|---|---|---|---|
+| `manguito_tope` | Locking sleeve | 60 x 60 x 60 | sin probar |
+| `hub_cruce` | Hanger Bar Hub | 46 x 75 x 46 | geometria verificada; sin probar impresa |
+| `bandeja` | Round Tray | 200 x 200 x 70 | sin probar |
+| `canasto` | (inner tray / canasto) | 190 x 190 x 95 | sin probar |
+| `brazo_estante` | brazo / estante | 153 x 50 x 110 | sin probar |
+| `multi_gancho` | Multi Hook | 96 x 107 x 113 | sin probar |
+| `base_flex` | Mini Base | 140 x 140 x 70 | sin probar |
+| `tapa_plato` | Top Cap | 130 x 130 x 60 | sin probar |
+
+### Como se arma (igual que el Hanger Bar)
+1. Deslizar un `manguito_tope` por el pilar y dejarlo a la altura del hub.
+2. Colocar el `hub_cruce` sobre el pilar, apoyado en el manguito; pasar la barra por el otro agujero.
+3. Deslizar un manguito a cada lado del hub sobre la barra y poner un `tapon_flexible` en cada extremo.
+
+El hub no sujeta nada por si mismo: tiene agujeros sueltos (juego `_holgura_hub`, 0.8 mm)
+y son los manguitos los que frenan los palos. Verificado: palos de hasta 25 mm pasan
+sueltos por los dos agujeros y queda pared entre ellos.
+
+### Pendiente de probar (checklist)
+- [ ] Agarre del palo con `prueba_agarre` y ajustar `_palo_*` en `config.scad`.
+- [ ] `_holgura_hub`: ¿los palos entran justos pero sin forzar?
+- [ ] Carga que aguanta cada pieza. El agarre por friccion estimado con el palo fino es de
+      ~4.5 N: sirve para livianos; para cargas reales apoyar la pieza en un `manguito_tope`.
+- [ ] `hub_cruce`: si la gota (punta a 45 grados) no alcanza para imprimir sin soporte.
+- [ ] `canasto`: el borde alto (80 mm, 3.2 mm de pared) es la parte mas debil.
+- [ ] `brazo_estante`: espesor de placa y cartela con el peso real de la tabla.
+- [ ] `multi_gancho`: peso que aguantan las clavijas.
+
 ## Fuentes
 
 - CHOIS Hanger Bar: https://thangs.com/designer/CraftedCycle/3d-model/CHOIS%20Hanger%20Bar-1616011
@@ -115,3 +232,8 @@ Perforar el palo cada cierta distancia y trabar con un pasador. Un **trinquete (
 - CraftedCycle: https://craftedcycle.com/ y https://thangs.com/designer/CraftedCycle
 - Guia de snap-fit 3D: https://www.unionfab.com/blog/2025/06/3d-print-snap-fit
 - Snap-fit joints (clips): https://www.sovol3d.com/blogs/news/3d-printed-snap-fit-joints-how-to-design-clips-that-work
+- Tacos de madera, tolerancias: https://www.mcmaster.com/wood-dowel-rods/ y https://www.woodcraft.com/products/oak-dowel-1-round (resumen de busqueda)
+- Mecanismos compliantes impresos: https://all3dp.com/2/compliant-mechanisms-3d-print/
+- Flexiones tipo pinza sobre varillas: https://arxiv.org/pdf/2605.00853
+- Mecanismo autocentrante de 3 brazos: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9442349
+- Snap-fit en 3D (orientacion de capas): https://www.core77.com/posts/65318/How-to-Design-Snap-Fit-Components

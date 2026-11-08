@@ -43,3 +43,14 @@ _profundidad     = 20;
 // Pared minima entre dos huecos de baqueta que se acercan (mm).
 // Con pico 0.8 conviene >= 2 perimetros (1.6 mm); 3 queda comodo.
 _pared_min       = 3;
+
+/* ---------- PALO DE ESCOBA (acoples sin tornillo) ----------
+   AJUSTAR DESPUES DE LAS PRUEBAS: estos valores gobiernan sin_tornillo.scad y
+   elementos_flex.scad. Imprimir primero calibre_palo y prueba_agarre con el palo
+   real, y recien despues tocar estos numeros (ver investigaciones/).            */
+_palo_min           = 22;     // diametro nominal del palo mas fino (mm)
+_palo_max           = 24;     // diametro nominal del palo mas grueso (mm)
+_palo_ovalidad      = 0.5;    // margen a cada lado para palos no simetricos (mm)
+_palo_precarga      = 0.3;    // apriete radial sobre el palo mas fino (mm)
+_palo_espesor_brazo = 2.4;    // espesor radial de cada brazo flexible (mm)
+_palo_largo_flex    = 30;     // largo de la zona flexible junto a la boca (mm)

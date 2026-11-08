@@ -1,6 +1,7 @@
 include <config.scad>
 use <hueco_baqueta.scad>
 use <utils/trigonometria.scad>
+include <utils/flexion.scad>
 
 /* ============================================================
    CALCULADORA DE DIAGONALES, CRUCES Y TRIPODES
@@ -11,6 +12,7 @@ use <utils/trigonometria.scad>
      ./calcular.sh diagonal angulo=40 dx=600
      ./calcular.sh cruz     dx=800 dz=600
      ./calcular.sh tripode  altura=700 apertura=20 patas=3
+     ./calcular.sh flexible d_min=22 d_max=24 ovalidad=0.5 precarga=0.3
 
    modo "diagonal": un puntal entre un POSTE vertical (nodo A) y un
         TRAVESANO horizontal (nodo B).
@@ -19,6 +21,10 @@ use <utils/trigonometria.scad>
    modo "cruz": las dos diagonales de un marco rectangular dx x dz
         (distancias entre nodos, de eje a eje).
    modo "tripode": patas de un pie_tripode, altura = del nodo al piso.
+   modo "flexible": acople sin tornillo (sin_tornillo.scad). Dado el rango de
+        diametros del palo, informa la flecha de cada brazo, la deformacion en
+        la raiz frente al limite y el agarre axial estimado. Los valores de
+        fuerza son ESTIMACIONES (ver supuestos en utils/flexion.scad).
 
    Hipotenusa = largo entre ejes = adyacente / cos(angulo).
    Largo a cortar = largo entre ejes - fondo de un hueco - fondo del otro
@@ -28,7 +34,7 @@ use <utils/trigonometria.scad>
    (pared entre huecos) y desfase entre las dos varillas de una cruz.
    ============================================================ */
 
-modo              = "diagonal";    // "diagonal" | "cruz" | "tripode"
+modo              = "diagonal";    // "diagonal" | "cruz" | "tripode" | "flexible"
 dx                = 0;             // mm
 dz                = 0;             // mm
 angulo            = 0;             // grados desde la horizontal (diagonal/cruz)
@@ -39,6 +45,17 @@ profundidad_hueco = 45;            // de los acoples
 piso_punta        = 5;             // macizo bajo el hueco en punta_pata
 luz_cruz          = 2;             // luz entre las dos varillas de una cruz
 pared             = _pared_min;
+
+// --- modo flexible ---
+d_min             = _palo_min;            // diametro nominal del palo mas fino (mm)
+d_max             = _palo_max;            // diametro nominal del palo mas grueso (mm)
+ovalidad          = _palo_ovalidad;           // margen por palo no simetrico, a cada lado (mm)
+precarga          = _palo_precarga;           // apriete radial sobre el palo mas fino (mm)
+n_brazos          = 3;
+espesor_brazo     = _palo_espesor_brazo;           // radial (mm); >= 2 lineas del pico
+largo_flex        = 30;            // largo de la zona flexible = ancho del brazo (mm)
+ancho_poste       = 4;
+ancho_ranura      = 1.6;
 
 g   = grosor_baqueta(_diametro, _holgura, _familia_tuerca, _subtipo_tuerca, _medida_tornillo);
 r_h = (_diametro + _holgura) / 2;
@@ -100,7 +117,44 @@ module informe_tripode(altura, apertura, patas) {
              r1(2 * radio * sin(180 / patas)), " mm"));
 }
 
+module informe_flexible() {
+    g     = geom_flex(d_min, d_max, ovalidad, precarga, espesor_brazo);
+    r_med = g[1] + espesor_brazo / 2;
+    L     = largo_arco(r_med, n_brazos, ancho_poste, ancho_ranura);
+    b     = largo_flex;
+    d_pre = g[3]; d_mx = g[4];
+    eps   = deformacion_brazo(espesor_brazo, L, d_mx);
+    Fp    = fuerza_brazo(b, espesor_brazo, L, d_pre);
+    Fm    = fuerza_brazo(b, espesor_brazo, L, d_mx);
+    wall  = g_ext() / 2 - g[6];
+    echo("== Acople sin tornillo (brazos tangenciales) ==");
+    echo(str("  rango de diseño del palo: ", d_min - ovalidad, " a ", d_max + ovalidad,
+             " mm  (nominal ", d_min, "-", d_max, " + ovalidad ", ovalidad, ")"));
+    echo(str("  diametro libre entre resaltes en reposo = ", r1(2 * g[0]), " mm | agujero interior = ", r1(2 * g[1]), " mm"));
+    echo(str("  flecha de cada resalte: ", r1(d_pre), " mm con el palo mas fino, ", r1(d_mx), " mm con el mas grueso"));
+    echo(str("  espacio detras del brazo = ", r1(g[5]), " mm | radio del alojamiento = ", r1(g[6]),
+             " mm | camisa restante = ", r1(wall), " mm"));
+    echo(str("  ", n_brazos, " brazos de ", r1(L), " mm de arco, ", espesor_brazo, " mm de espesor, ", b, " mm de ancho"));
+    echo(str("  deformacion en la raiz con el palo mas grueso = ", r1(eps * 100), " %  (limite supuesto ", eps_max * 100, " %)"));
+    echo(str("  fuerza por brazo: ", r1(Fp), " N (palo fino) a ", r1(Fm), " N (palo grueso)"));
+    echo(str("  >>> AGARRE AXIAL ESTIMADO (mu = ", mu, "): ", r1(agarre(n_brazos, b, espesor_brazo, L, d_pre)), " N con el palo mas fino, ",
+             r1(agarre(n_brazos, b, espesor_brazo, L, d_mx)), " N con el mas grueso"));
+    echo(str("  relacion de agarre grueso/fino = ", r1(d_mx / d_pre), " : 1"));
+    if (eps > eps_max)
+        echo(str("  ADVERTENCIA: deformacion ", r1(eps * 100), " % > ", eps_max * 100, " %. Brazo minimo para ese limite: ",
+                 r1(largo_brazo_min(espesor_brazo, d_mx)), " mm (menos brazos, menos espesor o menos precarga/ovalidad)"));
+    if (wall < pared)
+        echo(str("  ADVERTENCIA: camisa de ", r1(wall), " mm < pared minima ", pared, " mm"));
+    echo("  alternativas de cantidad de brazos (largo de arco / deformacion):");
+    for (n = [3 : 6]) {
+        Ln = largo_arco(r_med, n, ancho_poste, ancho_ranura);
+        echo(str("    ", n, " brazos: ", r1(Ln), " mm / ", r1(deformacion_brazo(espesor_brazo, Ln, d_mx) * 100), " %"));
+    }
+}
+function g_ext() = grosor_baqueta(_diametro, _holgura, _familia_tuerca, _subtipo_tuerca, _medida_tornillo);
+
 if (modo == "diagonal")     informe_diagonal(dx, dz, angulo);
 else if (modo == "cruz")    informe_cruz(dx, dz);
 else if (modo == "tripode") informe_tripode(altura, apertura, patas);
+else if (modo == "flexible") informe_flexible();
 else echo(str("calculadora: modo desconocido '", modo, "'"));

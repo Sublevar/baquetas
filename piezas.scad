@@ -6,6 +6,8 @@ use <patas.scad>
 use <apoyos.scad>
 use <diagonales.scad>
 use <tripodes.scad>
+use <sin_tornillo.scad>
+use <elementos_flex.scad>
 
 /* ============================================================
    SELECTOR DE PIEZAS
@@ -60,5 +62,25 @@ else if (pieza == "tripode_3")               pie_tripode(patas = 3, apertura = 2
 else if (pieza == "tripode_4")               pie_tripode(patas = 4, apertura = 20);
 else if (pieza == "punta_pata_25")           punta_pata(apertura = 25);
 else if (pieza == "punta_pata_20")           punta_pata(apertura = 20);
+
+
+// --- sin tornillo, para palos de 22 a 24 mm (ver sin_tornillo.scad); salen de pie, boca arriba ---
+else if (pieza == "flexible_acople")         rotate([0, -90, 0]) acople_flexible();
+else if (pieza == "flexible_collar")         rotate([0, -90, 0]) collar_flexible();
+else if (pieza == "flexible_tapon")          rotate([0, -90, 0]) tapon_flexible();
+else if (pieza == "flexible_cuna")           cuna_ajuste();
+else if (pieza == "flexible_calibre")        calibre_palo();
+else if (pieza == "flexible_prueba")         prueba_flexible();
+
+
+// --- elementos sin tornillo (ver elementos_flex.scad; PRUEBAS pendientes alli) ---
+else if (pieza == "elem_manguito_tope")      manguito_tope();
+else if (pieza == "elem_hub_cruce")          hub_cruce();
+else if (pieza == "elem_bandeja")            bandeja();
+else if (pieza == "elem_canasto")            canasto();
+else if (pieza == "elem_brazo_estante")      brazo_estante();
+else if (pieza == "elem_multi_gancho")       multi_gancho();
+else if (pieza == "elem_base")               base_flex();
+else if (pieza == "elem_tapa_plato")         tapa_plato();
 
 else echo(str("piezas.scad: pieza desconocida o sin elegir -> '", pieza, "'"));
