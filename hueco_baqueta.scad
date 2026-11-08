@@ -37,9 +37,6 @@ cantidad_tornillos = 1;      // 1, 2, 3, 4, 6, lo que necesites
 
 ancho_baqueta = 30;           // largo del cilindro macizo (eje Y de la pieza)
 
-d = diametro + holgura;
-r = d / 2;
-
 /* ============================================================
    NORMALIZACIÓN DE SUBTIPOS ENTRE FAMILIAS
    UNC/UNF usan "jam"/"nylon", metrica/whitworth usan
@@ -96,11 +93,6 @@ function grosor_baqueta(
     subtipo  = subtipo_tuerca,
     medida   = medida_tornillo
 ) = (diametro + holgura) + ancho_tuerca(familia, subtipo, medida) * reiterar_tuerca;
-
-c = ancho_tuerca(familia_tuerca, subtipo_tuerca, medida_tornillo);
-sagita = r - sqrt(pow(r, 2) - pow(c / 2, 2)) + holgura;
-
-echo(str("Tuerca elegida: ", familia_tuerca, " / ", subtipo_tuerca, " ", medida_tornillo, " -> ancho llave: ", c));
 
 /* ============================================================
    DISTRIBUCIÓN RADIAL CON children()

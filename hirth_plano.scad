@@ -20,14 +20,9 @@ use <hirth.scad>
    ============================================================ */
 
 // Baqueta / eje
-_diametro        = 24;
-_holgura         = 0.5;
-_poly_n          = 16;
+include <config.scad>
 
 // Tornillos
-_familia_tuerca  = "UNC";
-_subtipo_tuerca  = "normal";
-_medida_tornillo = 0.1875;      // presion sobre la baqueta
 _medida_central  = 0.25;        // tornillo central (1/4")
 
 // Dientes

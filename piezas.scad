@@ -1,0 +1,48 @@
+include <config.scad>
+use <juntas.scad>
+use <hirth.scad>
+use <hirth_plano.scad>
+use <patas.scad>
+use <apoyos.scad>
+
+/* ============================================================
+   SELECTOR DE PIEZAS
+   Una pieza fisica por STL. Se elige con -D:
+
+     openscad -D 'pieza="junta_doble"' -o junta_doble.stl piezas.scad
+
+   build.sh recorre toda la lista y ordena los STL por tipo.
+   Para agregar una pieza: una linea aca y una en build.sh.
+   ============================================================ */
+pieza = "ninguna";
+
+// --- juntas ---
+if      (pieza == "junta_doble")             junta_doble();
+else if (pieza == "junta_doble_linea")       junta_doble(rot_a = 0, rot_b = 0);
+else if (pieza == "junta_array_gradual")     junta_array(modo = "gradual");
+else if (pieza == "junta_array_extremos")    junta_array(modo = "extremos");
+else if (pieza == "junta_array_degrade")     junta_array(modo = "degrade");
+else if (pieza == "junta_array_solo_extremos") junta_array(modo = "solo_extremos");
+else if (pieza == "junta_T")                 junta_T();
+else if (pieza == "junta_angulo")            junta_angulo();
+else if (pieza == "union_lineal")            union_lineal();
+else if (pieza == "terminal")                terminal();
+
+// --- hirth (cada mitad en su propio marco, dientes hacia arriba) ---
+else if (pieza == "hirth_A")                 junta_hirth(vista = "A");
+else if (pieza == "hirth_B")                 junta_hirth(vista = "B");
+else if (pieza == "hirth_plana_A")           junta_hirth_plana(vista = "A");
+else if (pieza == "hirth_plana_B")           junta_hirth_plana(vista = "B");
+
+// --- patas ---
+else if (pieza == "pata_base")               pata_base();
+else if (pieza == "rotula_vastago")          pata_rotula(vista = "vastago");
+else if (pieza == "rotula_copa")             pata_rotula(vista = "copa");
+
+// --- apoyos ---
+else if (pieza == "pared_perpendicular")     acople_pared();
+else if (pieza == "pared_paralelo")          acople_pared(modo = "paralelo", largo = 70);
+else if (pieza == "estante_un_brazo")        apoyo_estante();
+else if (pieza == "estante_esquinero")       apoyo_estante(brazos = [0, 90]);
+
+else echo(str("piezas.scad: pieza desconocida o sin elegir -> '", pieza, "'"));

@@ -11,15 +11,9 @@ use <utils/acople.scad>
    ============================================================ */
 
 // Baqueta / eje
-_diametro        = 24;
-_holgura         = 0.5;
-_poly_n          = 16;
+include <config.scad>
 
 // Tornillo de presion sobre la baqueta
-_familia_tuerca  = "UNC";
-_subtipo_tuerca  = "normal";
-_medida_tornillo = 0.1875;
-_profundidad     = 20;
 
 // Tornillos de fijacion a pared / estante (madera, mm)
 _d_tornillo_fijacion = 4.5;

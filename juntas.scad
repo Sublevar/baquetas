@@ -7,26 +7,17 @@ use <utils/utils.scad>
    afectan a todos los modulos que no sobreescriban el parametro.
    ============================================================ */
 
-// Baqueta / eje
-_diametro        = 24;     // diametro interior del eje (mm)
-_holgura_a       = 0.5;    // holgura radial extremo A
-_holgura_b       = 0.5;    // holgura radial extremo B
-_poly_n          = 16;     // resolucion de circulos
+// Baqueta, rosca y profundidad: ver config.scad
+include <config.scad>
+_holgura_a       = _holgura;    // holgura radial extremo A
+_holgura_b       = _holgura;    // holgura radial extremo B
 _ancho_baqueta   = 40;     // longitud del cilindro macizo (mm)
 
-// Tornillo / tuerca (cambia las 3 lineas de abajo para usar otra rosca en todo el archivo)
-_familia_tuerca  = "UNC";       // "UNC" | "UNF" | "metrica" | "whitworth"
-_subtipo_tuerca  = "normal";    // "normal" | "delgada" | "autoblocante" | "brida"
-_medida_tornillo = 0.1875;      // pulgadas para UNC/UNF/whitworth; mm para metrica
-
 // Defaults de ensamble
-_profundidad     = 20;     // grosor de material (profundidad_pieza en hueco_baqueta)
 _distancia       = 40;     // separacion entre baquetas en arrays / juntas dobles
 _cantidad        = 5;      // cantidad de elementos en arrays
 _cantidad_junta_angular        = 2; 
 
-_centrada        = false;
-_pasante         = false;
 _angulo           = 90;
 
 _cantidad_tornillos=2;
@@ -323,8 +314,6 @@ module junta_angulo(
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
     medida_tornillo    = _medida_tornillo,
-    centrada           = _centrada,
-    pasante            = _pasante,
     cantidad           = _cantidad_junta_angular,
     angulo_total             = _angulo
 
@@ -397,76 +386,6 @@ module junta_angulo(
     //MEJORAR EL AVELLANADO ya que la profundidad 
     //    cantidad_tornillos    = cantidad_tornillos,
     //angulo_tornillo       = angulo_tornillo,
-}
-
-
-/* ============================================================
-   JUNTA Costilla
-   Dos baquetas perpendiculares; el segundo brazo gira 90 en Y.
-   cantidad_main: tornillos en el brazo principal
-   cantidad_rama: tornillos en el brazo transversal
-   ============================================================ */
-module junta_Costilla(
-    ancho_baqueta      = 60,
-    desface_centro     = [0, 0, -5],
-    cantidad_main      = 2,
-    cantidad_rama      = 1,
-    profundidad_pieza  = _profundidad,
-    diametro           = _diametro,
-    holgura_a          = _holgura_a,
-    holgura_b          = _holgura_b,
-    poly_n             = _poly_n,
-    familia_tuerca     = _familia_tuerca,
-    subtipo_tuerca     = _subtipo_tuerca,
-    medida_tornillo    = _medida_tornillo
-) {
-    difference() {
-        hull() {
-            baqueta_solida(
-                ancho_baqueta   = ancho_baqueta,
-                diametro        = diametro,
-                holgura         = holgura_a,
-                poly_n          = poly_n,
-                familia_tuerca  = familia_tuerca,
-                subtipo_tuerca  = subtipo_tuerca,
-                medida_tornillo = medida_tornillo
-            );
-            translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
-                baqueta_solida(
-                    ancho_baqueta   = ancho_baqueta,
-                    diametro        = diametro,
-                    holgura         = holgura_b,
-                    poly_n          = poly_n,
-                    familia_tuerca  = familia_tuerca,
-                    subtipo_tuerca  = subtipo_tuerca,
-                    medida_tornillo = medida_tornillo
-                );
-        }
-        hueco_baqueta(
-            cantidad_tornillos    = cantidad_main,
-            profundidad_pieza     = profundidad_pieza,
-            largo_hueco_principal = ancho_baqueta,
-            desface_centro        = desface_centro,
-            diametro              = diametro,
-            holgura               = holgura_a,
-            poly_n                = poly_n,
-            familia_tuerca        = familia_tuerca,
-            subtipo_tuerca        = subtipo_tuerca,
-            medida_tornillo       = medida_tornillo
-        );
-        translate([ancho_baqueta, 0, 0]) rotate([0, 90, 0])
-            hueco_baqueta(
-                cantidad_tornillos    = cantidad_rama,
-                profundidad_pieza     = profundidad_pieza,
-                largo_hueco_principal = ancho_baqueta,
-                diametro              = diametro,
-                holgura               = holgura_b,
-                poly_n                = poly_n,
-                familia_tuerca        = familia_tuerca,
-                subtipo_tuerca        = subtipo_tuerca,
-                medida_tornillo       = medida_tornillo
-            );
-    }
 }
 
 
@@ -695,9 +614,6 @@ translate([100, 100, 0])
 translate([-100, 360, 0])
     color([.75,0,.25])junta_angulo();
     
-translate([100, 250, 0])
-    color([1,0,0])junta_Costilla();
-
     
     
 // Union lineal
