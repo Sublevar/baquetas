@@ -377,7 +377,7 @@ module junta_angulo(
                 subtipo_tuerca        = subtipo_tuerca,
                 medida_tornillo       = medida_tornillo,
                 cantidad_tornillos    = cantidad_tornillos,
-                angulo_tornillo        = angulo_total/2,
+                angulo_tornillo        = angulo_total/2
                 );
                 //profundidad_avellano // escribir module hueco_baqueta(
 

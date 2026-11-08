@@ -12,6 +12,18 @@ use <utils/acople.scad>
    Las dos baquetas quedan en planos paralelos y giran alrededor
    del eje Z. La mitad B se da vuelta (rotate 180 en X) para
    enfrentarla a la A.
+
+   UN SOLO SCRIPT, tres modos (junta_hirth(modo = ...)):
+     "tope"         dientes hundidos dentro de una pared de tope (diseno original),
+                    con muescas en la otra mitad para que los palos no choquen.
+     "cilindros"    cilindros macizos (alto = radio del acople, eje del palo a la altura de los
+                    dientes), sin pared, sin bolsillo y sin muescas. Hull + cilindro que
+                    niega el espacio de los dientes + union de los dientes. Los palos solo
+                    quedan libres entre 150 y 210 grados.
+     "cilindros_90" igual, pero el cilindro que niega el espacio sube a radio + 10 mm, lo
+                    que recorta los flancos del hull sobre el disco: los palos quedan libres
+                    desde 90 hasta 270 grados (medido con los valores por defecto, 24 dientes).
+   Tornillo central de 1/4" PASANTE en todos: avellanado en A, tuerca en B.
    ============================================================ */
 
 // Baqueta / eje
@@ -32,6 +44,10 @@ _pared           = 8;      // espesor de la pared (tope) alrededor de los diente
 _alto_tope       = 20;     // altura del tope; el cilindro de la baqueta apoya en su base
 _largo           = 85;     // desde el eje Hirth hasta la boca
 _prof_hueco      = 45;     // profundidad del hueco de la baqueta
+
+// Modos cilindros
+_largo_extra     = 55;     // la boca de la baqueta queda a radio + largo_extra
+_base            = 0;      // 0 = automatico: radio del acople (g/2)
 
 /* ============================================================
    DISENO (marco "tope abajo")
@@ -205,7 +221,7 @@ module hirth_mitad(
    Cada mitad sale con la muesca que le deja el cilindro de la otra
    (con la luz_radial), en la posicion de "pasos".
    ============================================================ */
-module junta_hirth(
+module junta_hirth_tope(
     pasos              = 6,
     vista              = "ensamblada",
     holgura_axial      = 0.2,
@@ -287,16 +303,163 @@ module junta_hirth(
 
 
 /* ============================================================
+   MODOS "cilindros" y "cilindros_90"
+   ============================================================ */
+module hirth_cil_mitad(
+    con_tuerca         = false,
+    fase               = 0,
+    radio              = _radio,
+    n_dientes          = _n_dientes,
+    prof_diente        = _prof_diente,
+    pendiente          = _pendiente,
+    base_              = _base,
+    largo_extra        = _largo_extra,
+    x_palo             = 12,      // donde arranca el cuerpo del palo
+    r_corte            = 0,       // radio del cilindro que niega el espacio sobre el disco (0 = radio de los dientes)
+    profundidad_hueco  = _prof_hueco,
+    cantidad_tornillos = 1,
+    angulo_tornillo    = 90,
+    profundidad_pieza  = 20,
+    diametro           = _diametro,
+    holgura            = _holgura,
+    poly_n             = _poly_n,
+    familia_tuerca     = _familia_tuerca,
+    subtipo_tuerca     = _subtipo_tuerca,
+    medida_tornillo    = _medida_tornillo,
+    medida_central     = _medida_central
+) {
+    a     = prof_diente / 2;
+    g     = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
+    base  = base_ > 0 ? base_ : g / 2;     // alto del cilindro = radio del acople
+    largo = radio + largo_extra;
+    x_in  = x_palo;
+    zc    = -base + g / 2;   // eje del palo (= 0 con la base automatica: a la altura de los dientes)
+    d_central = diametro_tornillo_mm(familia_tuerca, medida_central) + 0.5;
+    prof_av   = profundidad_avellano_tuerca(familia_tuerca, medida_central);
+
+    difference() {
+        union() {
+            // 1-2: hull cilindro + palo, menos el espacio de los dientes
+            difference() {
+                hull() {
+                    translate([0, 0, -base]) cylinder(r = radio, h = base - a, $fn = 96);
+                    translate([x_in, 0, zc])
+                        acople_cuerpo(
+                            largo = largo - x_in, diametro = diametro, holgura = holgura,
+                            poly_n = poly_n, familia_tuerca = familia_tuerca,
+                            subtipo_tuerca = subtipo_tuerca, medida_tornillo = medida_tornillo
+                        );
+                }
+                translate([0, 0, -a]) cylinder(r = max(radio, r_corte) + 0.02, h = 3 * g, $fn = 96);
+            }
+            // 3: union de los dientes
+            rotate([0, 0, fase]) hirth_cara(radio, n_dientes, prof_diente, pendiente);
+        }
+        // hueco del palo + tornillo de presion
+        translate([x_in, 0, zc])
+            acople_hueco(
+                largo = largo - x_in, profundidad_hueco = profundidad_hueco,
+                cantidad_tornillos = cantidad_tornillos, angulo_tornillo = angulo_tornillo,
+                profundidad_pieza = profundidad_pieza,
+                diametro = diametro, holgura = holgura, poly_n = poly_n,
+                familia_tuerca = familia_tuerca, subtipo_tuerca = subtipo_tuerca,
+                medida_tornillo = medida_tornillo
+            );
+        // tornillo central 1/4": cabeza avellanada en una mitad, tuerca en la otra
+        translate([0, 0, -base - 1]) cylinder(d = d_central, h = base + a + 2, $fn = 24);
+        if (con_tuerca)
+            translate([0, 0, -base])
+                agujero_tuerca(familia_tuerca, subtipo_tuerca, medida_central, base + a, 0);
+        else
+            translate([0, 0, -base - 0.5])
+                avellanado_tuerca(familia_tuerca, medida_central, prof_av + 0.5);
+    }
+}
+
+/* vista: "ensamblada" | "explosionada" | "impresion" | "A" | "B"
+   pasos: giro de B respecto de A en pasos de 360/n_dientes */
+module junta_hirth_cil(
+    pasos         = 6,
+    vista         = "ensamblada",
+    holgura_axial = 0.2,
+    separacion    = 50,
+    radio         = _radio,
+    n_dientes     = _n_dientes,
+    prof_diente   = _prof_diente,
+    x_palo        = 12,
+    r_corte       = 0
+) {
+    paso = 360 / n_dientes;
+    echo(str("Hirth cilindros R=", radio, " n=", n_dientes, ": paso ", paso, " grados; palos libres desde ",
+             r_corte > radio ? "90" : "150", " grados"));
+
+    module mitad(con_tuerca, fase)
+        hirth_cil_mitad(con_tuerca = con_tuerca, fase = fase, radio = radio,
+                        n_dientes = n_dientes, prof_diente = prof_diente, x_palo = x_palo, r_corte = r_corte);
+
+    if (vista == "A")
+        mitad(false, 0);
+    else if (vista == "B")
+        mitad(true, paso / 2);
+    else if (vista == "impresion") {
+        mitad(false, 0);
+        translate([0, -2.2 * radio - 40, 0]) mitad(true, paso / 2);
+    } else {
+        mitad(false, 0);
+        translate([0, 0, holgura_axial + (vista == "explosionada" ? separacion : 0)])
+            rotate([0, 0, pasos * paso]) rotate([180, 0, 0])
+                mitad(true, paso / 2);
+    }
+}
+
+/* ============================================================
+   JUNTA HIRTH (punto de entrada de los tres modos)
+   modo: "tope" | "cilindros" | "cilindros_90"   (ver cabecera)
+   vista: "ensamblada" | "explosionada" | "impresion" | "A" | "B"
+   pasos: giro de B respecto de A en pasos de 360/n_dientes
+   Para ajustar a fondo el modo "tope" (pared, alto, tornillos) usar junta_hirth_tope().
+   ============================================================ */
+module junta_hirth(
+    modo          = "tope",
+    pasos         = 6,
+    vista         = "ensamblada",
+    holgura_axial = 0.2,
+    separacion    = 50,
+    radio         = _radio,
+    n_dientes     = _n_dientes,
+    prof_diente   = _prof_diente
+) {
+    if (modo == "tope")
+        junta_hirth_tope(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
+                         separacion = separacion, radio = radio, n_dientes = n_dientes,
+                         prof_diente = prof_diente);
+    else if (modo == "cilindros")
+        junta_hirth_cil(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
+                        separacion = separacion, radio = radio, n_dientes = n_dientes,
+                        prof_diente = prof_diente);
+    else if (modo == "cilindros_90")
+        junta_hirth_cil(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
+                        separacion = separacion, radio = radio, n_dientes = n_dientes,
+                        prof_diente = prof_diente, r_corte = radio + 10);
+    else
+        echo(str("junta_hirth: modo desconocido -> '", modo, "'"));
+}
+
+/* ============================================================
    DEMO
    ============================================================ */
 
-// Ensamblada a 90 grados (6 pasos de 15)
+// modo tope, a 90 grados (6 pasos de 15)
 junta_hirth(pasos = 6);
 
-// Explosionada para ver los dientes
-translate([0, 220, 0])
-    junta_hirth(pasos = 6, vista = "explosionada");
+// cilindros (palos libres solo entre 150 y 210 grados)
+translate([0, 220, 0]) junta_hirth(modo = "cilindros", pasos = 12);
 
-// Lista para imprimir (base plana abajo, dientes hacia arriba)
-translate([220, 0, 0])
-    junta_hirth(vista = "impresion");
+// cilindros_90 a 90 grados
+translate([0, 440, 0]) junta_hirth(modo = "cilindros_90", pasos = 6);
+
+// explosionada para ver los dientes
+translate([260, 0, 0]) junta_hirth(modo = "cilindros_90", pasos = 8, vista = "explosionada");
+
+// lista para imprimir (base plana abajo, dientes hacia arriba)
+translate([260, 220, 0]) junta_hirth(modo = "cilindros_90", vista = "impresion");

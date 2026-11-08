@@ -1,0 +1,32 @@
+name: Generar STL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  stl:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        perfil: [pico04, pico08]
+    steps:
+      - uses: actions/checkout@v4
+
+      # OpenSCAD 2021.01 (el de Ubuntu 22.04) es el mismo con el que se desarrolla
+      - name: Instalar OpenSCAD
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openscad xvfb xauth
+
+      - name: Exportar piezas (${{ matrix.perfil }})
+        run: xvfb-run -a ./build.sh ${{ matrix.perfil }}
+
+      - name: Subir STL
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stl-${{ matrix.perfil }}
+          path: stl/${{ matrix.perfil }}
+          if-no-files-found: error

@@ -6,12 +6,19 @@
 # Los perfiles estan definidos en config.scad (_perfiles).
 #   ./build.sh pico04 hirth_A  # una sola pieza
 #   OUT=/otra/carpeta ./build.sh
+#   docker build -t baquetas . && docker run --rm -v "$PWD/stl:/app/stl" baquetas ./build.sh pico08
 #
 # Para agregar una pieza: lineas en piezas.scad y en LISTA (tipo/nombre:pieza).
 set -euo pipefail
 cd "$(dirname "$0")"
 
-OPENSCAD="${OPENSCAD:-$(command -v openscad || echo /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD)}"
+# openscad del PATH (Linux, Docker, CI); si no esta, la ruta de macOS; OPENSCAD=... lo pisa
+if [[ -z "${OPENSCAD:-}" ]]; then
+  if command -v openscad >/dev/null; then OPENSCAD="$(command -v openscad)"
+  elif [[ -x /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD ]]; then OPENSCAD=/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD
+  else echo "build.sh: no encuentro openscad (instalarlo o usar OPENSCAD=/ruta/openscad)" >&2; exit 2
+  fi
+fi
 PERFIL="${1:-pico04}"
 SOLO="${2:-}"
 OUT="${OUT:-stl}/$PERFIL"
@@ -31,8 +38,10 @@ LISTA=(
   juntas/terminal:terminal
   hirth/A:hirth_A
   hirth/B:hirth_B
-  hirth/plana_A:hirth_plana_A
-  hirth/plana_B:hirth_plana_B
+  hirth/cil_A:hirth_cil_A
+  hirth/cil_B:hirth_cil_B
+  hirth/cil90_A:hirth_cil90_A
+  hirth/cil90_B:hirth_cil90_B
   patas/base:pata_base
   patas/rotula_vastago:rotula_vastago
   patas/rotula_copa:rotula_copa
@@ -63,6 +72,9 @@ LISTA=(
   elementos/multi_gancho:elem_multi_gancho
   elementos/base:elem_base
   elementos/tapa_plato:elem_tapa_plato
+  muebles/esquinero_tabla:mueble_esquinero_tabla
+  muebles/guia_cajon:mueble_guia_cajon
+  muebles/bolsillo_panel:mueble_bolsillo_panel
 )
 
 fallos=0

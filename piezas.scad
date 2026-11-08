@@ -1,13 +1,13 @@
 include <config.scad>
 use <juntas.scad>
 use <hirth.scad>
-use <hirth_plano.scad>
 use <patas.scad>
 use <apoyos.scad>
 use <diagonales.scad>
 use <tripodes.scad>
 use <sin_tornillo.scad>
 use <elementos_flex.scad>
+use <muebles.scad>
 
 /* ============================================================
    SELECTOR DE PIEZAS
@@ -35,8 +35,10 @@ else if (pieza == "terminal")                terminal();
 // --- hirth (cada mitad en su propio marco, dientes hacia arriba) ---
 else if (pieza == "hirth_A")                 junta_hirth(vista = "A");
 else if (pieza == "hirth_B")                 junta_hirth(vista = "B");
-else if (pieza == "hirth_plana_A")           junta_hirth_plana(vista = "A");
-else if (pieza == "hirth_plana_B")           junta_hirth_plana(vista = "B");
+else if (pieza == "hirth_cil_A")             junta_hirth(modo = "cilindros", vista = "A");
+else if (pieza == "hirth_cil_B")             junta_hirth(modo = "cilindros", vista = "B");
+else if (pieza == "hirth_cil90_A")           junta_hirth(modo = "cilindros_90", vista = "A");
+else if (pieza == "hirth_cil90_B")           junta_hirth(modo = "cilindros_90", vista = "B");
 
 // --- patas ---
 else if (pieza == "pata_base")               pata_base();
@@ -82,5 +84,10 @@ else if (pieza == "elem_brazo_estante")      brazo_estante();
 else if (pieza == "elem_multi_gancho")       multi_gancho();
 else if (pieza == "elem_base")               base_flex();
 else if (pieza == "elem_tapa_plato")         tapa_plato();
+
+// --- muebles con tornillo de presion (ver muebles.scad) ---
+else if (pieza == "mueble_esquinero_tabla")  rotate([180, 0, 0]) esquinero_tabla();   // placa contra la cama
+else if (pieza == "mueble_guia_cajon")       guia_cajon();
+else if (pieza == "mueble_bolsillo_panel")   bolsillo_panel();
 
 else echo(str("piezas.scad: pieza desconocida o sin elegir -> '", pieza, "'"));
