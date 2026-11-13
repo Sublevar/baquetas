@@ -24,6 +24,7 @@ use <utils/acople.scad>
                     que recorta los flancos del hull sobre el disco: los palos quedan libres
                     desde 90 hasta 270 grados (medido con los valores por defecto, 24 dientes).
    Tornillo central de 1/4" PASANTE en todos: avellanado en A, tuerca en B.
+   Dos tornillos de presion por palo, paralelos al central (eje Z): uno por la base y otro por arriba.
    ============================================================ */
 
 // Baqueta / eje
@@ -151,8 +152,8 @@ module hirth_mitad(
     alto_tope          = _alto_tope,
     largo              = _largo,
     profundidad_hueco  = _prof_hueco,
-    cantidad_tornillos = 1,
-    angulo_tornillo    = 90,
+    cantidad_tornillos = 2,       // con 180: uno por la base y otro por arriba, ambos paralelos al central
+    angulo_tornillo    = 180,     // paralelo al tornillo central, entra por la base (0 = por arriba, 90 = de costado)
     profundidad_pieza  = 20,
     diametro           = _diametro,
     holgura            = _holgura,
@@ -235,8 +236,8 @@ module junta_hirth_tope(
     alto_tope          = _alto_tope,
     largo              = _largo,
     profundidad_hueco  = _prof_hueco,
-    cantidad_tornillos = 1,
-    angulo_tornillo    = 90,
+    cantidad_tornillos = 2,       // con 180: uno por la base y otro por arriba, ambos paralelos al central
+    angulo_tornillo    = 180,     // paralelo al tornillo central, entra por la base (0 = por arriba, 90 = de costado)
     profundidad_pieza  = 20,
     diametro           = _diametro,
     holgura            = _holgura,
@@ -317,8 +318,8 @@ module hirth_cil_mitad(
     x_palo             = 12,      // donde arranca el cuerpo del palo
     r_corte            = 0,       // radio del cilindro que niega el espacio sobre el disco (0 = radio de los dientes)
     profundidad_hueco  = _prof_hueco,
-    cantidad_tornillos = 1,
-    angulo_tornillo    = 90,
+    cantidad_tornillos = 2,       // con 180: uno por la base y otro por arriba, ambos paralelos al central
+    angulo_tornillo    = 180,     // paralelo al tornillo central, entra por la base (0 = por arriba, 90 = de costado)
     profundidad_pieza  = 20,
     diametro           = _diametro,
     holgura            = _holgura,
