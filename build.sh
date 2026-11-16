@@ -48,6 +48,8 @@ LISTA=(
   hirth/inv_B:hirth_inv_B
   hirth/inv_pas_A:hirth_inv_pas_A
   hirth/inv_pas_B:hirth_inv_pas_B
+  hirth/inv_al_A:hirth_inv_al_A
+  hirth/inv_al_B:hirth_inv_al_B
   hirth/plano_A:hirth_plano_A
   hirth/plano_B:hirth_plano_B
   hirth/plano_pas_A:hirth_plano_pas_A

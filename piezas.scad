@@ -45,6 +45,8 @@ else if (pieza == "hirth_inv_A")             junta_hirth(modo = "cilindros_inv",
 else if (pieza == "hirth_inv_B")             junta_hirth(modo = "cilindros_inv", vista = "B");
 else if (pieza == "hirth_inv_pas_A")         junta_hirth(modo = "cilindros_inv", vista = "A", asiento = "pasante");
 else if (pieza == "hirth_inv_pas_B")         junta_hirth(modo = "cilindros_inv", vista = "B", asiento = "pasante");
+else if (pieza == "hirth_inv_al_A")          junta_hirth(modo = "cilindros_inv", vista = "A", alinear_ejes = true);
+else if (pieza == "hirth_inv_al_B")          junta_hirth(modo = "cilindros_inv", vista = "B", alinear_ejes = true);
 else if (pieza == "hirth_plano_A")           junta_hirth(modo = "plano", vista = "A");
 else if (pieza == "hirth_plano_B")           junta_hirth(modo = "plano", vista = "B");
 else if (pieza == "hirth_plano_pas_A")       junta_hirth(modo = "plano", vista = "A", asiento = "pasante");

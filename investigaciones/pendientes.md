@@ -38,6 +38,14 @@ Estado: todo compila en OpenSCAD pero **nada esta probado impreso**.
     `pasos = k_min`** (tiene que salir vacia): la cuenta toma el palo como franja de ancho 2w y
     deja aparte el flanco del hull (que llega hasta d_tope). Con 45 grados el acople se alarga
     (largo = d_tope + profundidad del hueco).
+- **Nuevo (sin probar, solo compila): ejes de los palos en el mismo plano (`alinear_ejes`).**
+  Referencia z = 0 = plano medio de los dientes; B es A volteada, asi que el desfase entre ejes
+  es 2*|z_c|. `tope`: ahora por defecto z_c = 0 y el tope crece a max(alto_tope, g/2) (antes el
+  desfase era 2*(alto_tope - g/2)); cambia la geometria de `hirth_A/B` y el largo del tornillo
+  central. Cilindros: ya tenian z_c = 0. `cilindros_inv`/`plano`: opcional (`hirth_inv_al_A/B`),
+  fuerza asiento pasante y niega los dientes con r_corte = radio + 10 como `cilindros_90`, asi que
+  se pierde el giro libre en 360. **Verificar `vista = "choque"`** en tope (pasos 6) y en inv
+  alineado (pasos 6 = 90 grados): tiene que salir vacia.
 ## Compilacion
 - `build.sh` funciona en Linux/Docker/CI (usa `openscad` del PATH; la ruta de macOS es solo un
   respaldo). `Dockerfile` y `.github/workflows/build.yml` agregados, **sin ejecutar en GitHub**.

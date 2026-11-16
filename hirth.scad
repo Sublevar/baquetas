@@ -34,6 +34,14 @@ use <utils/acople.scad>
                     para armar familias de radios y dientes.
    En "plano" y "cilindros_inv", asiento = "eje" (tuerca/cabeza a la altura del eje del palo,
    canal desde abajo) o "pasante" (base plana, tornillo atraviesa toda la pieza).
+   EJES DE LOS PALOS (z = 0 es el plano medio de los dientes = plano de union; B es A volteada,
+   asi que un eje en z_c queda a 2*|z_c| del de la otra mitad):
+     "tope"                        z_c = 0 (alinear_ejes = true, defecto; el tope crece a
+                                   max(alto_tope, g/2)). Con false: z_c = -alto_tope + g/2.
+     "cilindros", "_90", "_calado" z_c = -base + g/2 = 0 con la base automatica: coplanares.
+     "cilindros_inv", "plano"      z_c = -a - g/2 (desfase 2a + g, giro libre en 360).
+                                   Con alinear_ejes = true: z_c = 0, asiento pasante y libres
+                                   desde ~90 grados (niega los dientes como cilindros_90).
    Tornillo central de 1/4" PASANTE en todos: avellanado en A, tuerca en B.
    Dos tornillos de presion por palo, paralelos al central (eje Z): uno por la base y otro por arriba.
    ============================================================ */
@@ -100,8 +108,15 @@ module hirth_cara(radio, n, prof_diente, pendiente) {
     }
 }
 
-// Posicion Z del eje de la baqueta: su base queda alineada con la del tope
-function hirth_zc(alto_tope, g) = -alto_tope + g / 2;
+// Posicion Z del eje de la baqueta.
+//   alinear = true : eje en z = 0 (plano medio de los dientes = plano de union). Como B es la
+//                    misma mitad volteada, sus ejes quedan en el MISMO plano (desfase 0).
+//   alinear = false: la base del cilindro queda alineada con la del tope; los ejes de A y B
+//                    quedan desfasados 2*(alto_tope - g/2).
+// Alto efectivo del tope: con alinear, la base del cilindro baja a -g/2, asi que el tope
+// tiene que medir al menos g/2 para que la base siga plana.
+function hirth_alto(alto_tope, g, alinear) = alinear ? max(alto_tope, g / 2) : alto_tope;
+function hirth_zc(alto_tope, g, alinear = true) = alinear ? 0 : -alto_tope + g / 2;
 
 /* ============================================================
    FORMA DE LA BAQUETA (cilindro + mezcla con el tope, sin hueco)
@@ -110,6 +125,7 @@ function hirth_zc(alto_tope, g) = -alto_tope + g / 2;
 module hirth_forma_baqueta(
     radio, pared, alto_tope, largo, luz_radial, prof_diente,
     inflar          = 0,
+    alinear_ejes    = true,
     diametro        = _diametro,
     holgura         = _holgura,
     poly_n          = _poly_n,
@@ -118,14 +134,15 @@ module hirth_forma_baqueta(
     medida_tornillo = _medida_tornillo
 ) {
     g     = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
-    zc    = hirth_zc(alto_tope, g);
+    alto  = hirth_alto(alto_tope, g, alinear_ejes);
+    zc    = hirth_zc(alto, g, alinear_ejes);
     x_in  = radio + luz_radial + 2;
     r_out = radio + pared;
     a     = prof_diente / 2;
 
     module envolvente() {
         hull() {
-            translate([0, 0, -alto_tope]) cylinder(r = r_out, h = 6, $fn = 64);
+            translate([0, 0, -alto]) cylinder(r = r_out, h = 6, $fn = 64);
             translate([x_in, 0, zc])
                 acople_cuerpo(
                     largo = largo - x_in, diametro = diametro, holgura = holgura,
@@ -173,10 +190,12 @@ module hirth_mitad(
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
     medida_tornillo    = _medida_tornillo,
-    medida_central     = _medida_central
+    medida_central     = _medida_central,
+    alinear_ejes       = true     // eje del palo en z = 0 (ver hirth_zc)
 ) {
     g     = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
-    zc    = hirth_zc(alto_tope, g);
+    alto  = hirth_alto(alto_tope, g, alinear_ejes);
+    zc    = hirth_zc(alto, g, alinear_ejes);
     x_in  = radio + luz_radial + 2;
     r_out = radio + pared;
     a     = prof_diente / 2;
@@ -187,7 +206,7 @@ module hirth_mitad(
         union() {
             // tope con bolsillo hasta el piso de los valles
             difference() {
-                translate([0, 0, -alto_tope]) cylinder(r = r_out, h = alto_tope, $fn = 64);
+                translate([0, 0, -alto]) cylinder(r = r_out, h = alto, $fn = 64);
                 translate([0, 0, -a]) cylinder(r = radio + luz_radial, h = a + 1, $fn = 64);
             }
             // dientes con meseta
@@ -195,6 +214,7 @@ module hirth_mitad(
             // cilindro de baqueta mezclado con el tope
             hirth_forma_baqueta(
                 radio, pared, alto_tope, largo, luz_radial, prof_diente,
+                alinear_ejes = alinear_ejes,
                 diametro = diametro, holgura = holgura, poly_n = poly_n,
                 familia_tuerca = familia_tuerca, subtipo_tuerca = subtipo_tuerca,
                 medida_tornillo = medida_tornillo
@@ -213,13 +233,13 @@ module hirth_mitad(
             );
 
         // tornillo central
-        translate([0, 0, -alto_tope - 1])
-            cylinder(d = d_central, h = alto_tope + a + 2, $fn = 24);
+        translate([0, 0, -alto - 1])
+            cylinder(d = d_central, h = alto + a + 2, $fn = 24);
         if (con_tuerca)
-            translate([0, 0, -alto_tope])
-                agujero_tuerca(familia_tuerca, subtipo_tuerca, medida_central, alto_tope + a, 0);
+            translate([0, 0, -alto])
+                agujero_tuerca(familia_tuerca, subtipo_tuerca, medida_central, alto + a, 0);
         else
-            translate([0, 0, -alto_tope - 0.5])
+            translate([0, 0, -alto - 0.5])
                 avellanado_tuerca(familia_tuerca, medida_central, prof_av + 0.5);
 
         children();
@@ -230,7 +250,9 @@ module hirth_mitad(
    JUNTA HIRTH
    pasos: giro de la mitad B respecto de A, en pasos de 360/n_dientes
           (0 = baquetas alineadas y superpuestas, n/2 = en linea opuestas)
-   vista: "ensamblada" | "explosionada" | "impresion" | "A" | "B"
+   vista: "ensamblada" | "explosionada" | "impresion" | "A" | "B" | "choque"
+   alinear_ejes: true (defecto) pone el eje de cada palo en z = 0, asi los ejes de A y B
+          quedan en el mismo plano; el tope crece a max(alto_tope, g/2).
    Cada mitad sale con la muesca que le deja el cilindro de la otra
    (con la luz_radial), en la posicion de "pasos".
    ============================================================ */
@@ -257,14 +279,19 @@ module junta_hirth_tope(
     familia_tuerca     = _familia_tuerca,
     subtipo_tuerca     = _subtipo_tuerca,
     medida_tornillo    = _medida_tornillo,
-    medida_central     = _medida_central
+    medida_central     = _medida_central,
+    alinear_ejes       = true     // ejes de A y B en el mismo plano (z = 0)
 ) {
     paso = 360 / n_dientes;
     ang  = pasos * paso;
+    g    = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
+    alto = hirth_alto(alto_tope, g, alinear_ejes);
+    zc   = hirth_zc(alto, g, alinear_ejes);
 
     echo(str("Hirth: paso=", paso, " grados, giro=", ang,
-             " grados, largo minimo del tornillo central ~ ",
-             2 * alto_tope + holgura_axial, " mm + cabeza/tuerca"));
+             " grados, alto del tope=", alto, " mm, eje del palo en z=", zc,
+             " (desfase entre ejes A-B ", 2 * abs(zc), " mm), largo minimo del tornillo central ~ ",
+             2 * alto + holgura_axial, " mm + cabeza/tuerca"));
 
     module mitad(con_tuerca, fase)
         hirth_mitad(
@@ -276,13 +303,14 @@ module junta_hirth_tope(
             profundidad_pieza = profundidad_pieza,
             diametro = diametro, holgura = holgura, poly_n = poly_n,
             familia_tuerca = familia_tuerca, subtipo_tuerca = subtipo_tuerca,
-            medida_tornillo = medida_tornillo, medida_central = medida_central
+            medida_tornillo = medida_tornillo, medida_central = medida_central,
+            alinear_ejes = alinear_ejes
         ) children();
 
     module forma()
         hirth_forma_baqueta(
             radio, pared, alto_tope, largo, luz_radial, prof_diente,
-            inflar = luz_radial,
+            inflar = luz_radial, alinear_ejes = alinear_ejes,
             diametro = diametro, holgura = holgura, poly_n = poly_n,
             familia_tuerca = familia_tuerca, subtipo_tuerca = subtipo_tuerca,
             medida_tornillo = medida_tornillo
@@ -307,7 +335,9 @@ module junta_hirth_tope(
     else if (vista == "impresion") {
         mitad_A();
         translate([0, -2.2 * (radio + pared) - 20, 0]) mitad_B();
-    } else {
+    } else if (vista == "choque")
+        intersection() { mitad_A(); a_marco_de_A() mitad_B(); }
+    else {
         mitad_A();
         a_marco_de_A(vista == "explosionada" ? separacion : 0)
             mitad_B();
@@ -565,6 +595,8 @@ module hirth_plano_mitad(
     largo_extra        = _largo_extra,
     x_palo             = 12,
     asiento            = "eje",
+    alinear_ejes       = false,   // true: eje del palo en z = 0 (ejes de A y B coplanares)
+    r_corte            = 0,       // con alinear_ejes: radio que niega el espacio sobre el disco (0 = radio + 10)
     profundidad_hueco  = _prof_hueco,
     cantidad_tornillos = 1,
     angulo_tornillo    = 90,
@@ -582,26 +614,35 @@ module hirth_plano_mitad(
     base_  = base > 0 ? base : g / 2;
     largo  = radio + largo_extra;
     x_in   = x_palo;
-    zc     = -a - g / 2;      // el cilindro cuelga justo bajo el piso de los valles
-    z_fondo = zc - g / 2;
+    // sin alinear el cilindro cuelga justo bajo el piso de los valles (desfase A-B = 2a + g);
+    // alineado sube a z = 0 y cruza el plano de union (se pierde el giro libre en 360)
+    zc     = alinear_ejes ? 0 : -a - g / 2;
+    z_fondo = alinear_ejes ? -max(base_, g / 2) : zc - g / 2;
+    r_neg  = r_corte > 0 ? r_corte : radio + 10;
     r_pie  = ancho_tuerca(familia_tuerca, subtipo_tuerca, medida_central) / 2 / cos(30) + 4;
-    z_asiento = asiento == "pasante" ? z_fondo : zc;
+    // alineado: con "eje" el canal llegaria hasta los dientes, se fuerza "pasante"
+    z_asiento = (asiento == "pasante" || alinear_ejes) ? z_fondo : zc;
 
     difference() {
         union() {
             rotate([0, 0, fase]) hirth_cara(radio, n_dientes, prof_diente, pendiente);
             // disco + palo mezclados ANTES de restar los tornillos
-            hull() {
-                translate([0, 0, -base_]) cylinder(r = radio, h = base_ - a + 0.01, $fn = 64);
-                translate([x_in, 0, zc])
-                    acople_cuerpo(
-                        largo = largo - x_in, diametro = diametro, holgura = holgura,
-                        poly_n = poly_n, familia_tuerca = familia_tuerca,
-                        subtipo_tuerca = subtipo_tuerca, medida_tornillo = medida_tornillo
-                    );
-                // pasante: pie plano bajo el eje Hirth para que apoye la tuerca o la cabeza
-                if (asiento == "pasante")
-                    translate([0, 0, z_fondo]) cylinder(r = r_pie, h = 1, $fn = 48);
+            difference() {
+                hull() {
+                    translate([0, 0, -base_]) cylinder(r = radio, h = base_ - a + 0.01, $fn = 64);
+                    translate([x_in, 0, zc])
+                        acople_cuerpo(
+                            largo = largo - x_in, diametro = diametro, holgura = holgura,
+                            poly_n = poly_n, familia_tuerca = familia_tuerca,
+                            subtipo_tuerca = subtipo_tuerca, medida_tornillo = medida_tornillo
+                        );
+                    // pasante: pie plano bajo el eje Hirth para que apoye la tuerca o la cabeza
+                    if (asiento == "pasante" || alinear_ejes)
+                        translate([0, 0, z_fondo]) cylinder(r = r_pie, h = 1, $fn = 48);
+                }
+                // alineado: niega el espacio de los dientes sobre el palo (como cilindros_90)
+                if (alinear_ejes)
+                    translate([0, 0, -a]) cylinder(r = max(radio, r_neg) + 0.02, h = 3 * g, $fn = 96);
             }
         }
         translate([x_in, 0, zc])
@@ -634,6 +675,8 @@ module junta_hirth_plana(
     largo_extra        = _largo_extra,
     x_palo             = 12,
     asiento            = "eje",
+    alinear_ejes       = false,
+    r_corte            = 0,
     profundidad_hueco  = _prof_hueco,
     cantidad_tornillos = 1,
     angulo_tornillo    = 90,
@@ -648,11 +691,19 @@ module junta_hirth_plana(
 ) {
     paso = 360 / n_dientes;
     g    = grosor_baqueta(diametro, holgura, familia_tuerca, subtipo_tuerca, medida_tornillo);
-    zc   = -prof_diente / 2 - g / 2;
-    z_asiento = asiento == "pasante" ? zc - g / 2 : zc;
+    zc   = alinear_ejes ? 0 : -prof_diente / 2 - g / 2;
+    z_asiento = alinear_ejes ? -max(base > 0 ? base : g / 2, g / 2)
+              : asiento == "pasante" ? zc - g / 2 : zc;
 
-    echo(str("Hirth plana R=", radio, " n=", n_dientes, ": paso ", paso, " grados, giro libre 360; asiento '",
-             asiento, "': entre asientos ", -2 * z_asiento + holgura_axial, " mm (+ cabeza/tuerca)"));
+    if (alinear_ejes)
+        echo(str("Hirth plana R=", radio, " n=", n_dientes, ": paso ", paso,
+                 " grados, ejes alineados (z=0, desfase 0); palos libres desde ~90 grados",
+                 " (verificar con vista = \"choque\"); asiento pasante: entre asientos ",
+                 -2 * z_asiento + holgura_axial, " mm (+ cabeza/tuerca)"));
+    else
+        echo(str("Hirth plana R=", radio, " n=", n_dientes, ": paso ", paso, " grados, giro libre 360",
+                 ", desfase entre ejes A-B ", 2 * abs(zc), " mm; asiento '",
+                 asiento, "': entre asientos ", -2 * z_asiento + holgura_axial, " mm (+ cabeza/tuerca)"));
 
     module mitad(con_tuerca, fase)
         hirth_plano_mitad(
@@ -660,6 +711,7 @@ module junta_hirth_plana(
             radio = radio, n_dientes = n_dientes, prof_diente = prof_diente,
             pendiente = pendiente, base = base, largo_extra = largo_extra,
             x_palo = x_palo, asiento = asiento,
+            alinear_ejes = alinear_ejes, r_corte = r_corte,
             profundidad_hueco = profundidad_hueco,
             cantidad_tornillos = cantidad_tornillos, angulo_tornillo = angulo_tornillo,
             profundidad_pieza = profundidad_pieza,
@@ -693,9 +745,12 @@ module junta_hirth_plana(
    modo: "tope" | "cilindros" | "cilindros_90" | "cilindros_calado"
          | "cilindros_inv" | "plano"                (ver cabecera)
    vista: "ensamblada" | "explosionada" | "impresion" | "A" | "B"
-          (+ "choque" en los modos cilindros y plano)
+          (+ "choque": interseccion A-B ensambladas, vacia = sin interferencia)
    pasos: giro de B respecto de A en pasos de 360/n_dientes
    asiento: "eje" | "pasante"       (solo "plano" y "cilindros_inv")
+   alinear_ejes: ejes de A y B en el mismo plano (z = 0). En "tope" vale true por defecto;
+          los cilindros ya lo estan; en "plano" y "cilindros_inv" es opcional (fuerza asiento
+          pasante y se pierde el giro libre en 360: libres desde ~90 grados como cilindros_90).
    d_tope, angulo_min, forma_tope   (solo "cilindros_calado")
    Para ajustar a fondo el modo "tope" (pared, alto, tornillos) usar junta_hirth_tope().
    ============================================================ */
@@ -711,12 +766,14 @@ module junta_hirth(
     asiento       = "eje",
     d_tope        = 0,
     angulo_min    = 45,
-    forma_tope    = "v"
+    forma_tope    = "v",
+    alinear_ejes  = undef   // undef: true en "tope", false en "plano" y "cilindros_inv"
 ) {
     if (modo == "tope")
         junta_hirth_tope(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
                          separacion = separacion, radio = radio, n_dientes = n_dientes,
-                         prof_diente = prof_diente);
+                         prof_diente = prof_diente,
+                         alinear_ejes = is_undef(alinear_ejes) ? true : alinear_ejes);
     else if (modo == "cilindros")
         junta_hirth_cil(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
                         separacion = separacion, radio = radio, n_dientes = n_dientes,
@@ -734,11 +791,13 @@ module junta_hirth(
         junta_hirth_plana(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
                           separacion = separacion, radio = radio, n_dientes = n_dientes,
                           prof_diente = prof_diente, base = 0, asiento = asiento,
+                          alinear_ejes = is_undef(alinear_ejes) ? false : alinear_ejes,
                           cantidad_tornillos = 2, angulo_tornillo = 180);
     else if (modo == "plano")
         junta_hirth_plana(pasos = pasos, vista = vista, holgura_axial = holgura_axial,
                           separacion = separacion, radio = radio, n_dientes = n_dientes,
-                          prof_diente = prof_diente, asiento = asiento);
+                          prof_diente = prof_diente, asiento = asiento,
+                          alinear_ejes = is_undef(alinear_ejes) ? false : alinear_ejes);
     else
         echo(str("junta_hirth: modo desconocido -> '", modo, "'"));
 }
@@ -771,6 +830,8 @@ translate([520, 660, 0]) junta_hirth(modo = "cilindros_calado", pasos = 3, vista
 // cilindros_inv: dientes en la cara plana, palos superpuestos (0 pasos), asiento en el eje y pasante
 translate([0, 900, 0]) junta_hirth(modo = "cilindros_inv", pasos = 0);
 translate([260, 900, 0]) junta_hirth(modo = "cilindros_inv", pasos = 2, asiento = "pasante");
+// cilindros_inv con los ejes alineados en el mismo plano, a 90 grados
+translate([520, 900, 0]) junta_hirth(modo = "cilindros_inv", pasos = 6, alinear_ejes = true);
 
 // plano: familia de tamanos (mas radio -> mas dientes; paso sobre el borde de 7 a 10 mm)
 translate([0, 1140, 0])
