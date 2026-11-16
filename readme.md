@@ -8,7 +8,7 @@ para picos de 0.8 esrecomendabl e subir la holgura
 
 ## estructura y uso
 + `config.scad`: valores comunes y perfiles de impresion (`pico04`, `pico08`)
-+ `juntas.scad`, `hirth.scad` (un solo script, `junta_hirth(modo = "tope" | "cilindros" | "cilindros_90")`: tope con pared; cilindros macizos con hull + cilindro que niega los dientes + union de dientes, palos libres solo entre 150 y 210 grados; `cilindros_90` libres desde 90 grados; tornillo central pasante), `patas.scad`, `apoyos.scad`: piezas (cada una trae una demo al abrirla)
++ `juntas.scad`, `hirth.scad` (un solo script, `junta_hirth(modo = "tope" | "cilindros" | "cilindros_90" | "cilindros_calado" | "cilindros_inv" | "plano")`: tope con pared; cilindros macizos con hull + cilindro que niega los dientes + union de dientes, palos libres solo entre 150 y 210 grados; `cilindros_90` libres desde 90 grados; `cilindros_calado` con tope en V invertida, angulo minimo 2*atan(w/d); `cilindros_inv` y `plano` con dientes en la cara plana y giro libre en 360; tornillo central pasante), `patas.scad`, `apoyos.scad`: piezas (cada una trae una demo al abrirla)
 + `hueco_baqueta.scad` y `utils/`: huecos, tuercas y avellanados
 + `diagonales.scad`: acoples con diagonal a cualquier angulo y brazos (angulo 90)
 + `tripodes.scad`: hub de patas (`pie_tripode`) y zapata (`punta_pata`)

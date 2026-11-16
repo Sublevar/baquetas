@@ -42,6 +42,16 @@ LISTA=(
   hirth/cil_B:hirth_cil_B
   hirth/cil90_A:hirth_cil90_A
   hirth/cil90_B:hirth_cil90_B
+  hirth/calado_A:hirth_calado_A
+  hirth/calado_B:hirth_calado_B
+  hirth/inv_A:hirth_inv_A
+  hirth/inv_B:hirth_inv_B
+  hirth/inv_pas_A:hirth_inv_pas_A
+  hirth/inv_pas_B:hirth_inv_pas_B
+  hirth/plano_A:hirth_plano_A
+  hirth/plano_B:hirth_plano_B
+  hirth/plano_pas_A:hirth_plano_pas_A
+  hirth/plano_pas_B:hirth_plano_pas_B
   patas/base:pata_base
   patas/rotula_vastago:rotula_vastago
   patas/rotula_copa:rotula_copa

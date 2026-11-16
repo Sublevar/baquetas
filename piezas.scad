@@ -39,6 +39,16 @@ else if (pieza == "hirth_cil_A")             junta_hirth(modo = "cilindros", vis
 else if (pieza == "hirth_cil_B")             junta_hirth(modo = "cilindros", vista = "B");
 else if (pieza == "hirth_cil90_A")           junta_hirth(modo = "cilindros_90", vista = "A");
 else if (pieza == "hirth_cil90_B")           junta_hirth(modo = "cilindros_90", vista = "B");
+else if (pieza == "hirth_calado_A")          junta_hirth(modo = "cilindros_calado", vista = "A");
+else if (pieza == "hirth_calado_B")          junta_hirth(modo = "cilindros_calado", vista = "B");
+else if (pieza == "hirth_inv_A")             junta_hirth(modo = "cilindros_inv", vista = "A");
+else if (pieza == "hirth_inv_B")             junta_hirth(modo = "cilindros_inv", vista = "B");
+else if (pieza == "hirth_inv_pas_A")         junta_hirth(modo = "cilindros_inv", vista = "A", asiento = "pasante");
+else if (pieza == "hirth_inv_pas_B")         junta_hirth(modo = "cilindros_inv", vista = "B", asiento = "pasante");
+else if (pieza == "hirth_plano_A")           junta_hirth(modo = "plano", vista = "A");
+else if (pieza == "hirth_plano_B")           junta_hirth(modo = "plano", vista = "B");
+else if (pieza == "hirth_plano_pas_A")       junta_hirth(modo = "plano", vista = "A", asiento = "pasante");
+else if (pieza == "hirth_plano_pas_B")       junta_hirth(modo = "plano", vista = "B", asiento = "pasante");
 
 // --- patas ---
 else if (pieza == "pata_base")               pata_base();

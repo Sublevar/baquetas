@@ -44,6 +44,12 @@ _profundidad     = 20;
 // Con pico 0.8 conviene >= 2 perimetros (1.6 mm); 3 queda comodo.
 _pared_min       = 3;
 
+/* ---------- JUNTA HIRTH (hirth.scad) ----------
+   Crestas por vuelta: el paso de giro es 360/_n_dientes grados.
+   Tambien fija los pasos libres del modo "cilindros_calado"
+   (ver investigaciones/hirth_tope_calado.md).                    */
+_n_dientes       = 24;
+
 /* ---------- PALO DE ESCOBA (acoples sin tornillo) ----------
    AJUSTAR DESPUES DE LAS PRUEBAS: estos valores gobiernan sin_tornillo.scad y
    elementos_flex.scad. Imprimir primero calibre_palo y prueba_agarre con el palo

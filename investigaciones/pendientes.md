@@ -25,9 +25,19 @@ Estado: todo compila en OpenSCAD pero **nada esta probado impreso**.
   a confirmar: que los angulos posibles de la junta (y su rango libre) queden definidos y
   calculados en funcion del paso de los dientes (360/n_dientes), con la tabla de pasos libres
   informada por la propia pieza, en vez de medirlos a mano.
-- `hirth_plano.scad` aparece borrado del arbol de trabajo (no lo borre yo): las piezas
-  `hirth_plana_*` se sacaron de `piezas.scad`/`build.sh`. Esta en git (`git show HEAD:hirth_plano.scad`).
-
+- **Nuevos (sin probar, solo compilan): `cilindros_calado`, `cilindros_inv` y `plano`.**
+  - `plano` es la ex `hirth_plano.scad` (archivo borrado, migrado a `hirth.scad`). Se arreglo el
+    tornillo central: antes el hull disco-palo tapaba la tuerca y la cabeza. Ahora se resta despues
+    del hull (`hirth_tornillo_central`), con `asiento = "eje"` (canal desde abajo hasta el eje del
+    palo) o `"pasante"` (pie plano abajo, tornillo de unos 100 mm).
+  - `cilindros_inv`: los dientes van en la cara plana y cada palo queda de su lado del plano de
+    union (giro libre en 360). Es `hirth_plano_mitad` con base = g/2.
+  - `cilindros_calado`: tope en V invertida (o `forma_tope = "media_cana"`) a `d_tope` del eje.
+    La cuenta es theta_min = 2*atan(w/d), con w = g/2 + luz_tope (para angulos chicos da ~2w/d rad).
+    Con `d_tope = 0` sale de `angulo_min` (45). Matematica en `hirth_tope_calado.md`. **Verificar con `vista = "choque"` en
+    `pasos = k_min`** (tiene que salir vacia): la cuenta toma el palo como franja de ancho 2w y
+    deja aparte el flanco del hull (que llega hasta d_tope). Con 45 grados el acople se alarga
+    (largo = d_tope + profundidad del hueco).
 ## Compilacion
 - `build.sh` funciona en Linux/Docker/CI (usa `openscad` del PATH; la ruta de macOS es solo un
   respaldo). `Dockerfile` y `.github/workflows/build.yml` agregados, **sin ejecutar en GitHub**.
